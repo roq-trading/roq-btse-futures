@@ -1,9 +1,9 @@
-.. _roq-btse_futures:
+.. _roq-btse-futures:
 
 .. |checkmark| unicode:: U+2713
 
-roq-btse_futures
-===========
+roq-btse-futures
+================
 
 
 .. tab:: Unstable
@@ -12,7 +12,7 @@ roq-btse_futures
 
      $ conda install \
            --channel https://roq-trading.com/conda/unstable \
-           roq-btse_futures
+           roq-btse-futures
 
 .. tab:: Stable
 
@@ -20,21 +20,21 @@ roq-btse_futures
 
      $ conda install \
            --channel https://roq-trading.com/conda/stable \
-           roq-btse_futures
+           roq-btse-futures
 
 
-:code:`roq-btse_futures`
-------------------
+:code:`roq-btse-futures`
+------------------------
 
 .. code-block:: shell
 
-   $ roq-btse_futures [FLAGS]
+   $ roq-btse-futures [FLAGS]
 
 
 Description
 ~~~~~~~~~~~
 
-:code:`roq-btse_futures` is a gateway
+:code:`roq-btse-futures` is a gateway
 
 
 Supports
@@ -106,14 +106,14 @@ Supports
         - |checkmark|
 
 
-.. _roq-btse_futures-flags:
+.. _roq-btse-futures-flags:
 
 Flags
 -----
 
 .. code-block:: shell
 
-   $ roq-btse_futures --help
+   $ roq-btse-futures --help
 
 .. tab:: Flags
 
@@ -139,7 +139,7 @@ Environments
 
    .. code-block:: shell
 
-      $ $CONDA_PREFIX/share/roq-btse_futures/flags/prod/flags.cfg
+      $ $CONDA_PREFIX/share/roq-btse-futures/flags/prod/flags.cfg
 
    .. include:: flags/prod/flags.cfg
      :code: shell
@@ -152,7 +152,7 @@ Configuration
 
 .. code-block:: shell
 
-   $ $CONDA_PREFIX/share/roq-btse_futures/config.toml
+   $ $CONDA_PREFIX/share/roq-btse-futures/config.toml
 
 .. important::
 
