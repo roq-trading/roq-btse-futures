@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/json/Side",
+  "type": "enum",
+  "values": [
+    {
+      "name": "Buy"
+    },
+    {
+      "name": "Sell"
+    }
+  ]
+}

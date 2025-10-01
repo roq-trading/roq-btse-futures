@@ -1,0 +1,23 @@
+{
+  "name": "roq/btse_futures/json/Order",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "arg",
+      "type": "roq/btse_futures/json/Arg"
+    },
+    {
+      "name": "action",
+      "type": "roq/btse_futures/json/Action"
+    },
+    {
+      "name": "data",
+      "type": "roq/btse_futures/json/OrderDataItem",
+      "array": "std/span"
+    },
+    {
+      "name": "ts",
+      "type": "std/milliseconds"
+    }
+  ]
+}

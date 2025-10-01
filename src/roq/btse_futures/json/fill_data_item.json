@@ -1,0 +1,79 @@
+{
+  "name": "roq/btse_futures/json/FillDataItem",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "category",
+      "type": "roq/btse_futures/json/Category"
+    },
+    {
+      "name": "orderId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "clientOid",
+      "type": "std/string_view"
+    },
+    {
+      "name": "execId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "execLinkId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "orderType",
+      "type": "roq/btse_futures/json/OrderType"
+    },
+    {
+      "name": "side",
+      "type": "roq/btse_futures/json/Side"
+    },
+    {
+      "name": "holdSide",
+      "type": "roq/btse_futures/json/HoldSide"
+    },
+    {
+      "name": "tradeSide",
+      "type": "roq/btse_futures/json/TradeSide"
+    },
+    {
+      "name": "execPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "execQty",
+      "type": "std/double"
+    },
+    {
+      "name": "execValue",
+      "type": "std/double"
+    },
+    {
+      "name": "execPnl",
+      "type": "std/double"
+    },
+    {
+      "name": "tradeScope",
+      "type": "roq/btse_futures/json/TradeScope"
+    },
+    {
+      "name": "feeDetail",
+      "type": "roq/btse_futures/json/FillDataItemFeeDetailItem",
+      "array": "std/span"
+    },
+    {
+      "name": "execTime",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "updatedTime",
+      "type": "std/milliseconds"
+    }
+  ]
+}

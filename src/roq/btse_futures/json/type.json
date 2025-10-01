@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/json/Type",
+  "type": "enum",
+  "values": [
+    {
+      "name": "Spot"
+    },
+    {
+      "name": "Perpetual"
+    }
+  ]
+}

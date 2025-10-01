@@ -1,0 +1,15 @@
+{
+  "name": "roq/btse_futures/json/OpenOrdersData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "list",
+      "type": "roq/btse_futures/json/OpenOrdersDataListItem",
+      "array": "std/span"
+    },
+    {
+      "name": "cursor",
+      "type": "std/int64"
+    }
+  ]
+}

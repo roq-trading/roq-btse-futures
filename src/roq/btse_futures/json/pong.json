@@ -1,0 +1,17 @@
+{
+  "name": "roq/btse_futures/json/Pong",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "id",
+      "type": "std/int32"
+    },
+    {
+      "name": "error"
+    },
+    {
+      "name": "result",
+      "type": "std/string_view"
+    }
+  ]
+}

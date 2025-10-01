@@ -1,0 +1,18 @@
+{
+  "name": "roq/btse_futures/json/Login",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "event",
+      "type": "roq/btse_futures/json/Event"
+    },
+    {
+      "name": "code",
+      "type": "std/int32"
+    },
+    {
+      "name": "msg",
+      "type": "std/string_view"
+    }
+  ]
+}

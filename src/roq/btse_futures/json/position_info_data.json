@@ -1,0 +1,11 @@
+{
+  "name": "roq/btse_futures/json/PositionInfoData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "list",
+      "type": "roq/btse_futures/json/PositionInfoDataListItem",
+      "array": "std/span"
+    }
+  ]
+}

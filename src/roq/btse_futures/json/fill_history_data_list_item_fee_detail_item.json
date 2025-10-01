@@ -1,0 +1,14 @@
+{
+  "name": "roq/btse_futures/json/FillHistoryDataListItemFeeDetailItem",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "feeCoin",
+      "type": "std/string_view"
+    },
+    {
+      "name": "fee",
+      "type": "std/double"
+    }
+  ]
+}

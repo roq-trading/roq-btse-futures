@@ -1,0 +1,9 @@
+{
+  "name": "roq/btse_futures/json/AckResultStatus",
+  "type": "enum",
+  "values": [
+    {
+      "name": "success"
+    }
+  ]
+}

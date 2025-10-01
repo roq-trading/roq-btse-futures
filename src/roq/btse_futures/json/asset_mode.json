@@ -1,0 +1,15 @@
+{
+  "name": "roq/btse_futures/json/AssetMode",
+  "type": "enum",
+  "values": [
+    {
+      "name": "single"
+    },
+    {
+      "name": "union"
+    },
+    {
+      "name": "multi_assets"
+    }
+  ]
+}

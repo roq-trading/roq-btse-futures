@@ -1,0 +1,54 @@
+{
+  "name": "roq/btse_futures/json/Market24hData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "close",
+      "type": "std/double"
+    },
+    {
+      "name": "fundingRate",
+      "type": "std/double"
+    },
+    {
+      "name": "high",
+      "type": "std/double"
+    },
+    {
+      "name": "indexPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "low",
+      "type": "std/double"
+    },
+    {
+      "name": "markPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "open",
+      "type": "std/double"
+    },
+    {
+      "name": "openInterest",
+      "type": "std/double"
+    },
+    {
+      "name": "predFundingRate",
+      "type": "std/double"
+    },
+    {
+      "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "turnover",
+      "type": "std/double"
+    },
+    {
+      "name": "volume",
+      "type": "std/double"
+    }
+  ]
+}

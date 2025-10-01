@@ -1,0 +1,16 @@
+{
+  "name": "roq/btse_futures/json/BookData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "asks",
+      "type": "roq/btse_futures/json/BookDataItem",
+      "array": "std/span"
+    },
+    {
+      "name": "bids",
+      "type": "roq/btse_futures/json/BookDataItem",
+      "array": "std/span"
+    }
+  ]
+}

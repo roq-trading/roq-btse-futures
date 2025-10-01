@@ -1,0 +1,66 @@
+{
+  "name": "roq/btse_futures/json/MessageField",
+  "type": "enum",
+  "values": [
+    {
+      "name": "id",
+      "comment": "ack"
+    },
+    {
+      "name": "error",
+      "comment": "ack"
+    },
+    {
+      "name": "result",
+      "comment": "ack is dict, pong is string"
+    },
+    {
+      "name": "sequence",
+      "comment": "event"
+    },
+    {
+      "name": "timestamp",
+      "comment": "event"
+    },
+    {
+      "name": "symbol",
+      "comment": "event"
+    },
+    {
+      "name": "type",
+      "comment": "event"
+    },
+    {
+      "name": "book",
+      "comment": "event"
+    },
+    {
+      "name": "trades",
+      "comment": "event"
+    },
+    {
+      "name": "market24h",
+      "comment": "event"
+    },
+    {
+      "name": "kline",
+      "comment": "event"
+    },
+    {
+      "name": "depth",
+      "comment": "book"
+    },
+    {
+      "name": "priceScale",
+      "comment": "kline"
+    },
+    {
+      "name": "qtyScale",
+      "comment": "kline"
+    },
+    {
+      "name": "valueScale",
+      "comment": "kline"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "roq/btse_futures/json/PositionStatus",
+  "type": "enum",
+  "values": [
+    {
+      "name": "normal"
+    },
+    {
+      "name": "opening"
+    },
+    {
+      "name": "ended"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/json/Status",
+  "type": "enum",
+  "values": [
+    {
+      "name": "Listed"
+    },
+    {
+      "name": "Delisted"
+    }
+  ]
+}

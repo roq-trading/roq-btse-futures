@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/json/TradeScope",
+  "type": "enum",
+  "values": [
+    {
+      "name": "taker"
+    },
+    {
+      "name": "maker"
+    }
+  ]
+}

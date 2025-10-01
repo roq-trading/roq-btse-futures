@@ -1,0 +1,58 @@
+{
+  "name": "roq/btse_futures/json/ProductsDataCurrenciesItem",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "currency",
+      "type": "std/string_view"
+    },
+    {
+      "name": "name",
+      "type": "std/string_view"
+    },
+    {
+      "name": "code",
+      "type": "std/int32"
+    },
+    {
+      "name": "valueScale",
+      "type": "std/int32"
+    },
+    {
+      "name": "minValueEv",
+      "type": "std/double"
+    },
+    {
+      "name": "maxValueEv",
+      "type": "std/double"
+    },
+    {
+      "name": "needAddrTag",
+      "type": "std/int32"
+    },
+    {
+      "name": "status",
+      "type": "roq/btse_futures/json/Status"
+    },
+    {
+      "name": "displayCurrency",
+      "type": "std/string_view"
+    },
+    {
+      "name": "inAssetsDisplay",
+      "type": "std/int32"
+    },
+    {
+      "name": "perpetual",
+      "type": "std/int32"
+    },
+    {
+      "name": "stableCoin",
+      "type": "std/int32"
+    },
+    {
+      "name": "assetsPrecision",
+      "type": "std/int32"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "roq/btse_futures/json/Market24h",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "market24h",
+      "type": "roq/btse_futures/json/Market24hData"
+    },
+    {
+      "name": "timestamp",
+      "type": "std/nanoseconds"
+    }
+  ]
+}

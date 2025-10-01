@@ -1,0 +1,10 @@
+{
+  "name": "roq/btse_futures/json/AckResult",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "status",
+      "type": "roq/btse_futures/json/AckResultStatus"
+    }
+  ]
+}

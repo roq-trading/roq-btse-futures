@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/json/MessageType",
+  "type": "enum",
+  "values": [
+    {
+      "name": "snapshot"
+    },
+    {
+      "name": "incremental"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "roq/btse_futures/json/Ack",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "id",
+      "type": "std/int32"
+    },
+    {
+      "name": "error",
+      "type": "roq/btse_futures/json/AckError"
+    },
+    {
+      "name": "result",
+      "type": "roq/btse_futures/json/AckResult"
+    }
+  ]
+}

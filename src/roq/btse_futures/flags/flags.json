@@ -1,0 +1,19 @@
+{
+  "name": "roq/btse_futures/flags/Flags",
+  "type": "flags",
+  "values": [
+    {
+      "name": "exchange",
+      "type": "std/string",
+      "required": true,
+      "default": "btse_futures",
+      "description": "Exchange identifier"
+    },
+    {
+      "name": "api",
+      "type": "std/string",
+      "required": true,
+      "description": "API (:code:`SPOT`, :code:`MARGIN`, :code:`USD-M`, :code:`COIN-M`)"
+    }
+  ]
+}

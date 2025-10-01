@@ -1,0 +1,22 @@
+{
+  "name": "roq/btse_futures/json/AccountInfoDataSymbolConfigItem",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "category",
+      "type": "roq/btse_futures/json/Category"
+    },
+    {
+      "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "marginMode",
+      "type": "roq/btse_futures/json/MarginMode"
+    },
+    {
+      "name": "leverage",
+      "type": "std/double"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "roq/btse_futures/json/AccountInfoData",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "uid",
+      "type": "std/string_view"
+    },
+    {
+      "name": "accountMode",
+      "type": "roq/btse_futures/json/AccountMode"
+    },
+    {
+      "name": "assetMode",
+      "type": "roq/btse_futures/json/AssetMode"
+    },
+    {
+      "name": "holdMode",
+      "type": "roq/btse_futures/json/HoldMode"
+    },
+    {
+      "name": "stpMode",
+      "type": "roq/btse_futures/json/StpMode"
+    },
+    {
+      "name": "symbolConfigList",
+      "type": "roq/btse_futures/json/AccountInfoDataSymbolConfigItem",
+      "array": "std/span"
+    },
+    {
+      "name": "coinConfigList",
+      "type": "roq/btse_futures/json/AccountInfoDataCoinConfigItem",
+      "array": "std/span"
+    }
+  ]
+}

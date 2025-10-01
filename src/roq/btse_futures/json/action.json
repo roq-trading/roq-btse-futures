@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/json/Action",
+  "type": "enum",
+  "values": [
+    {
+      "name": "snapshot"
+    },
+    {
+      "name": "update"
+    }
+  ]
+}
