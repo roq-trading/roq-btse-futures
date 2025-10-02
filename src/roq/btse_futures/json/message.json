@@ -1,0 +1,20 @@
+{
+  "name": "roq/btse_futures/json/Message",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "event",
+      "type": "roq/btse_futures/json/Event"
+    },
+    {
+      "name": "channel"
+    },
+    {
+      "name": "topic",
+      "type": "std/string_view"
+    },
+    {
+      "name": "data"
+    }
+  ]
+}

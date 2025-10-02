@@ -27,17 +27,18 @@
 namespace roq {
 namespace btse_futures {
 
-class MarketData final : public web::socket::Client::Handler, public json::Parser::Handler {
+class OrderBook final : public web::socket::Client::Handler, public json::Parser::Handler {
  public:
   struct Handler {
     virtual void operator()(Trace<StreamStatus> const &) = 0;
     virtual void operator()(Trace<ExternalLatency> const &) = 0;
-    virtual void operator()(Trace<TradeSummary> const &, bool is_last) = 0;
+    virtual void operator()(Trace<TopOfBook> const &, bool is_last) = 0;
+    virtual void operator()(Trace<MarketByPriceUpdate> const &, bool is_last) = 0;
   };
 
-  MarketData(Handler &, io::Context &, uint16_t stream_id, Shared &, size_t index);
+  OrderBook(Handler &, io::Context &, uint16_t stream_id, Shared &, size_t index);
 
-  MarketData(MarketData const &) = delete;
+  OrderBook(OrderBook const &) = delete;
 
   uint16_t stream_id() const { return stream_id_; }
 
@@ -67,6 +68,7 @@ class MarketData final : public web::socket::Client::Handler, public json::Parse
 
   void subscribe(std::span<Symbol const> const &symbols);
   void subscribe(std::span<Symbol const> const &symbols, std::string_view const &channel);
+  void subscribe(std::span<Symbol const> const &symbols, std::string_view const &channel, uint32_t group);
 
   void parse(std::string_view const &message);
 
@@ -98,7 +100,7 @@ class MarketData final : public web::socket::Client::Handler, public json::Parse
     utils::metrics::Counter disconnect;
   } counter_;
   struct {
-    utils::metrics::Profile parse, trade_history;
+    utils::metrics::Profile parse, snapshot_l1, update;
   } profile_;
   struct {
     utils::metrics::Latency ping;

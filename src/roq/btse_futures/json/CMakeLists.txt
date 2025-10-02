@@ -16,24 +16,14 @@ set(AUTOGEN_SCHEMAS
     account_info.json
     account.json
     account_mode.json
-    ack_error.json
-    ack.json
-    ack_result.json
-    ack_result_status.json
     action.json
     arg.json
     asset_mode.json
-    book_data_item.json
-    book_data.json
-    book.json
     cancel_all_orders_ack_data.json
     cancel_all_orders_ack_data_list_item.json
     cancel_all_orders_ack.json
     cancel_order_ack_data.json
     cancel_order_ack.json
-    category.json
-    category_ws.json
-    delivery_period.json
     event.json
     fill_data_item_fee_detail_item.json
     fill_data_item.json
@@ -42,17 +32,13 @@ set(AUTOGEN_SCHEMAS
     fill_history_data_list_item.json
     fill_history.json
     fill.json
-    futures_type.json
     hold_mode.json
     hold_side.json
-    kline_data_item.json
-    kline.json
     login.json
     margin_mode.json
-    market24h_data.json
-    market24h.json
-    message_field.json
-    message_type.json
+    market_summary_item.json
+    market_summary.json
+    message.json
     modify_order_ack_data.json
     modify_order_ack.json
     open_orders_data.json
@@ -67,7 +53,6 @@ set(AUTOGEN_SCHEMAS
     order_type.json
     place_order_ack_data.json
     place_order_ack.json
-    pong.json
     position_data_item.json
     position_info_data.json
     position_info_data_list_item.json
@@ -76,23 +61,21 @@ set(AUTOGEN_SCHEMAS
     position_status.json
     pos_mode.json
     pos_side.json
-    products_data_currencies_item.json
-    products_data.json
-    products_data_products_item.json
-    products.json
     side.json
-    status.json
+    snapshot_l1_data_item.json
+    snapshot_l1_data.json
+    snapshot_l1.json
     stp_mode.json
-    symbol_status.json
-    symbol_type.json
     time_in_force.json
     topic.json
+    trade_history_data_item.json
+    trade_history.json
     trade_scope.json
     trade_side.json
-    trades.json
-    trades_trades_item.json
-    trading_status.json
-    type.json)
+    type.json
+    update_data_item.json
+    update_data.json
+    update.json)
 
 roq_autogen_hpp(
   OUTPUT

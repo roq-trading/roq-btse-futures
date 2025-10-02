@@ -1,0 +1,11 @@
+{
+  "name": "roq/btse_futures/json/MarketSummary",
+  "type": "array",
+  "values": [
+    {
+      "name": "data",
+      "type": "roq/btse_futures/json/MarketSummaryItem",
+      "array": "std/span"
+    }
+  ]
+}

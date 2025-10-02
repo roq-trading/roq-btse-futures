@@ -15,6 +15,7 @@
 #include "roq/btse_futures/config.hpp"
 #include "roq/btse_futures/drop_copy.hpp"
 #include "roq/btse_futures/market_data.hpp"
+#include "roq/btse_futures/order_book.hpp"
 #include "roq/btse_futures/order_entry.hpp"
 #include "roq/btse_futures/rest.hpp"
 #include "roq/btse_futures/settings.hpp"
@@ -23,7 +24,12 @@
 namespace roq {
 namespace btse_futures {
 
-class Gateway final : public server::Handler, public Rest::Handler, public OrderEntry::Handler, public DropCopy::Handler, public MarketData::Handler {
+class Gateway final : public server::Handler,
+                      public Rest::Handler,
+                      public OrderEntry::Handler,
+                      public DropCopy::Handler,
+                      public MarketData::Handler,
+                      public OrderBook::Handler {
  public:
   Gateway(server::Dispatcher &, Settings const &, Config const &, io::Context &);
 
@@ -60,7 +66,6 @@ class Gateway final : public server::Handler, public Rest::Handler, public Order
   void operator()(Trace<TopOfBook> const &, bool is_last) override;
   void operator()(Trace<MarketByPriceUpdate> const &, bool is_last) override;
   void operator()(Trace<TradeSummary> const &, bool is_last) override;
-  void operator()(Trace<StatisticsUpdate> const &, bool is_last) override;
   void operator()(Trace<TradeUpdate> const &, bool is_last, uint8_t user_id, std::string_view const &request_id) override;
   void operator()(Trace<FundsUpdate> const &, bool is_last) override;
   void operator()(Trace<PositionUpdate> const &, bool is_last) override;
@@ -96,6 +101,7 @@ class Gateway final : public server::Handler, public Rest::Handler, public Order
   utils::unordered_map<std::string, std::unique_ptr<OrderEntry>> order_entry_;
   utils::unordered_map<std::string, std::unique_ptr<DropCopy>> drop_copy_;
   std::vector<std::unique_ptr<MarketData>> market_data_;
+  std::vector<std::unique_ptr<OrderBook>> order_book_;
 };
 
 }  // namespace btse_futures

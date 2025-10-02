@@ -1,0 +1,28 @@
+{
+  "name": "roq/btse_futures/json/SnapshotL1Data",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "bids",
+      "type": "roq/btse_futures/json/SnapshotL1DataItem",
+      "array": "std/span"
+    },
+    {
+      "name": "asks",
+      "type": "roq/btse_futures/json/SnapshotL1DataItem",
+      "array": "std/span"
+    },
+    {
+      "name": "type",
+      "type": "std/string_view"
+    },
+    {
+      "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "timestamp",
+      "type": "std/milliseconds"
+    }
+  ]
+}

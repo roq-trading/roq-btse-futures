@@ -7,7 +7,7 @@
       "name": "uri",
       "type": "roq/io/web/URI",
       "validator": "roq/core/flags/URI",
-      "default": "https://testnet-api.btse_futures.com",
+      "default": "https://testapi.btse.io/futures",
       "description": "Exchange end-point"
     },
     {
@@ -27,7 +27,7 @@
       "name": "ping_path",
       "type": "std/string",
       "validator": "roq/flags/validators/Path",
-      "default": "/public/time",
+      "default": "/api/v2.1/price?symbol=BTCPFC",
       "description": "Ping path"
     },
     {

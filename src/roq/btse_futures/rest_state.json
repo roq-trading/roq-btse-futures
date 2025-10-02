@@ -3,7 +3,7 @@
   "type": "enum",
   "values": [
     {
-      "name": "products"
+      "name": "market_summary"
     },
     {
       "name": "done"

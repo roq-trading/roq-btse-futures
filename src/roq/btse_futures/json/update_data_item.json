@@ -1,13 +1,13 @@
 {
-  "name": "roq/btse_futures/json/BookDataItem",
+  "name": "roq/btse_futures/json/UpdateDataItem",
   "type": "by_index",
   "values": [
     {
-      "name": "price_ep",
+      "name": "price",
       "type": "std/double"
     },
     {
-      "name": "qty",
+      "name": "size",
       "type": "std/double"
     }
   ]

@@ -3,10 +3,10 @@
   "type": "enum",
   "values": [
     {
-      "name": "Spot"
+      "name": "snapshot"
     },
     {
-      "name": "Perpetual"
+      "name": "delta"
     }
   ]
 }

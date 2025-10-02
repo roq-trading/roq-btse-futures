@@ -6,7 +6,8 @@
 
 #include "roq/core/json/parser.hpp"
 
-#include "roq/btse_futures/json/message_field.hpp"
+#include "roq/btse_futures/json/message.hpp"
+#include "roq/btse_futures/json/topic.hpp"
 
 using namespace std::literals;
 
@@ -14,15 +15,11 @@ namespace roq {
 namespace btse_futures {
 namespace json {
 
-// === HELPERS ===
+// === CONSTANTS ===
 
 namespace {
-auto const BIT_ID = uint8_t{1} << 0;
-auto const BIT_BOOK = uint8_t{1} << 1;
-auto const BIT_TRADES = uint8_t{1} << 2;
-auto const BIT_MARKET24H = uint8_t{1} << 3;
-auto const BIT_KLINE = uint8_t{1} << 4;
-}  // namespace
+auto const PONG = "pong"sv;
+}
 
 // === HELPERS ===
 
@@ -32,92 +29,56 @@ void dispatch_helper(auto &handler, auto &message, auto &buffer_stack, auto &tra
   T obj{message, buffer_stack};
   create_trace_and_dispatch(handler, trace_info, obj);
 }
+
+auto extract_topic(std::string_view const &topic) {
+  auto pos = topic.find_first_of(':');
+  return Topic{topic.substr(0, pos)};
+}
 }  // namespace
 
 // === IMPLEMENTATION ===
 
 bool Parser::dispatch(
     Handler &handler, std::string_view const &message, core::json::BufferStack &buffer_stack, TraceInfo const &trace_info, bool allow_unknown_event_types) {
-  uint8_t mask = {};
-  auto pong = false;
-  auto helper = [&](auto &key, auto &value) {
-    MessageField field{key};
-    switch (field) {
-      using enum MessageField::type_t;
-      case UNDEFINED_INTERNAL:
-        assert(false);
-      case UNKNOWN_INTERNAL:
-        break;
-      case ID:
-        mask |= BIT_ID;
-        break;
-      case ERROR:
-        break;
-      case RESULT:
-        if (!core::json::is_object(value)) {
-          pong = true;
-        }
-        break;
-      case SEQUENCE:
-        break;
-      case TIMESTAMP:
-        break;
-      case SYMBOL:
-        break;
-      case TYPE:
-        break;
-      case BOOK:
-        mask |= BIT_BOOK;
-        break;
-      case TRADES:
-        mask |= BIT_TRADES;
-        break;
-      case MARKET24H:
-        mask |= BIT_MARKET24H;
-        break;
-      case KLINE:
-        mask |= BIT_KLINE;
-        break;
-      case DEPTH:
-        break;
-      case PRICE_SCALE:
-        break;
-      case QTY_SCALE:
-        break;
-      case VALUE_SCALE:
-        break;
-    }
-  };
-  core::json::Parser parser{message};
-  auto value = parser.root();
-  std::get<core::json::Object>(value).dispatch(helper);
-  if (mask == 0) [[unlikely]] {
-    if (allow_unknown_event_types) {
-      return false;
-    }
-  } else if (mask & BIT_ID) {
-    assert((mask & (~BIT_ID)) == 0);
-    if (pong) {
-      dispatch_helper<Pong>(handler, message, buffer_stack, trace_info);
-    } else {
-      dispatch_helper<Ack>(handler, message, buffer_stack, trace_info);
-    }
+  if (message == PONG) [[unlikely]] {
+    Pong pong;
+    create_trace_and_dispatch(handler, trace_info, pong);
     return true;
-  } else {
-    assert(mask != 0);
-    if (mask & BIT_BOOK) {
-      dispatch_helper<Book>(handler, message, buffer_stack, trace_info);
+  }
+  Message message_2{message, buffer_stack};
+  switch (message_2.event) {
+    using enum Event::type_t;
+    case UNDEFINED_INTERNAL: {
+      auto topic = extract_topic(message_2.topic);
+      switch (topic) {
+        using enum Topic::type_t;
+        case UNDEFINED_INTERNAL:
+          assert(false);
+        case UNKNOWN_INTERNAL:
+          if (allow_unknown_event_types) {
+            return false;
+          }
+          break;
+        case TRADE_HISTORY_API:
+          dispatch_helper<TradeHistory>(handler, message, buffer_stack, trace_info);
+          return true;
+        case SNAPSHOT_L1:
+          dispatch_helper<SnapshotL1>(handler, message, buffer_stack, trace_info);
+          return true;
+        case UPDATE:
+          dispatch_helper<Update>(handler, message, buffer_stack, trace_info);
+          return true;
+      }
+      break;
     }
-    if (mask & BIT_TRADES) {
-      dispatch_helper<Trades>(handler, message, buffer_stack, trace_info);
-    }
-    if (mask & BIT_MARKET24H) {
-      dispatch_helper<Market24h>(handler, message, buffer_stack, trace_info);
-    }
-    if (mask & BIT_KLINE) {
-      dispatch_helper<Kline>(handler, message, buffer_stack, trace_info);
-    }
-    return true;
+    case UNKNOWN_INTERNAL:
+      if (allow_unknown_event_types) {
+        return false;
+      }
+      break;
+    case SUBSCRIBE:
+      // drop
+      return true;
   }
   log::fatal(R"(Unexpected: message="{}")"sv, message);
 }

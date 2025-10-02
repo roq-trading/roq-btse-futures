@@ -74,110 +74,6 @@ std::optional<roq::MarginMode> Map<btse_futures::json::AssetMode>::helper() cons
   return Helper{args_};
 }
 
-// {btse_futures::json::Category, btse_futures::json::FuturesType} => roq::SecurityType
-
-template <>
-template <>
-constexpr Helper<btse_futures::json::Category, btse_futures::json::FuturesType>::operator std::optional<roq::SecurityType>() const {
-  switch (std::get<0>(args_)) {
-    using enum btse_futures::json::Category::type_t;
-    case UNDEFINED_INTERNAL:
-      return roq::SecurityType::UNDEFINED;
-    case UNKNOWN_INTERNAL:
-      return roq::SecurityType::UNDEFINED;
-    case SPOT:
-      return roq::SecurityType::SPOT;
-    case MARGIN:
-      return roq::SecurityType::SPOT;
-    case USDT_FUTURES:
-    case USDC_FUTURES:
-    case COIN_FUTURES:
-      switch (std::get<1>(args_)) {
-        using enum btse_futures::json::FuturesType::type_t;
-        case UNDEFINED_INTERNAL:
-          return roq::SecurityType::UNDEFINED;
-        case UNKNOWN_INTERNAL:
-          return roq::SecurityType::UNDEFINED;
-        case PERPETUAL:
-          return roq::SecurityType::SWAP;
-        case DELIVERY:
-          return roq::SecurityType::FUTURES;
-      }
-      break;
-  }
-  return {};
-}
-
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::UNDEFINED_INTERNAL},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::UNDEFINED_INTERNAL}} == roq::SecurityType::UNDEFINED);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::SPOT},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::UNDEFINED_INTERNAL}} == roq::SecurityType::SPOT);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::MARGIN},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::UNDEFINED_INTERNAL}} == roq::SecurityType::SPOT);
-
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::USDT_FUTURES},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::UNDEFINED_INTERNAL}} == roq::SecurityType::UNDEFINED);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::USDT_FUTURES},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::UNKNOWN_INTERNAL}} == roq::SecurityType::UNDEFINED);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::USDT_FUTURES},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::PERPETUAL}} == roq::SecurityType::SWAP);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::USDT_FUTURES}, btse_futures::json::FuturesType{btse_futures::json::FuturesType::DELIVERY}} ==
-    roq::SecurityType::FUTURES);
-
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::USDC_FUTURES},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::UNDEFINED_INTERNAL}} == roq::SecurityType::UNDEFINED);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::USDC_FUTURES},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::UNKNOWN_INTERNAL}} == roq::SecurityType::UNDEFINED);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::USDC_FUTURES},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::PERPETUAL}} == roq::SecurityType::SWAP);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::USDC_FUTURES}, btse_futures::json::FuturesType{btse_futures::json::FuturesType::DELIVERY}} ==
-    roq::SecurityType::FUTURES);
-
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::COIN_FUTURES},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::UNDEFINED_INTERNAL}} == roq::SecurityType::UNDEFINED);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::COIN_FUTURES},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::UNKNOWN_INTERNAL}} == roq::SecurityType::UNDEFINED);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::COIN_FUTURES},
-        btse_futures::json::FuturesType{btse_futures::json::FuturesType::PERPETUAL}} == roq::SecurityType::SWAP);
-static_assert(
-    Helper{
-        btse_futures::json::Category{btse_futures::json::Category::COIN_FUTURES}, btse_futures::json::FuturesType{btse_futures::json::FuturesType::DELIVERY}} ==
-    roq::SecurityType::FUTURES);
-
-template <>
-template <>
-std::optional<roq::SecurityType> Map<btse_futures::json::Category, btse_futures::json::FuturesType>::helper() const {
-  return Helper{args_};
-}
-
 // btse_futures::json::MarginMode => roq::MarginMode
 
 template <>
@@ -204,35 +100,6 @@ static_assert(Helper{btse_futures::json::MarginMode{btse_futures::json::MarginMo
 template <>
 template <>
 std::optional<roq::MarginMode> Map<btse_futures::json::MarginMode>::helper() const {
-  return Helper{args_};
-}
-
-// btse_futures::json::MessageType => roq::UpdateType
-
-template <>
-template <>
-constexpr Helper<btse_futures::json::MessageType>::operator std::optional<roq::UpdateType>() const {
-  switch (std::get<0>(args_)) {
-    using enum btse_futures::json::MessageType::type_t;
-    case UNDEFINED_INTERNAL:
-      return roq::UpdateType::UNDEFINED;
-    case UNKNOWN_INTERNAL:
-      return roq::UpdateType::UNDEFINED;
-    case SNAPSHOT:
-      return roq::UpdateType::SNAPSHOT;
-    case INCREMENTAL:
-      return roq::UpdateType::INCREMENTAL;
-  }
-  return {};
-}
-
-static_assert(Helper{btse_futures::json::MessageType{btse_futures::json::MessageType::UNDEFINED_INTERNAL}} == roq::UpdateType::UNDEFINED);
-static_assert(Helper{btse_futures::json::MessageType{btse_futures::json::MessageType::SNAPSHOT}} == roq::UpdateType::SNAPSHOT);
-static_assert(Helper{btse_futures::json::MessageType{btse_futures::json::MessageType::INCREMENTAL}} == roq::UpdateType::INCREMENTAL);
-
-template <>
-template <>
-std::optional<roq::UpdateType> Map<btse_futures::json::MessageType>::helper() const {
   return Helper{args_};
 }
 
@@ -566,44 +433,6 @@ static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide
 template <>
 template <>
 std::optional<roq::PositionEffect> Map<btse_futures::json::TradeSide>::helper() const {
-  return Helper{args_};
-}
-
-// btse_futures::json::TradingStatus => roq::TradingStatus
-
-template <>
-template <>
-constexpr Helper<btse_futures::json::TradingStatus>::operator std::optional<roq::TradingStatus>() const {
-  switch (std::get<0>(args_)) {
-    using enum btse_futures::json::TradingStatus::type_t;
-    case UNDEFINED_INTERNAL:
-      return roq::TradingStatus::UNDEFINED;
-    case UNKNOWN_INTERNAL:
-      return roq::TradingStatus::UNDEFINED;
-    case LISTED:
-      return roq::TradingStatus::UNDEFINED;
-    case ONLINE:
-      return roq::TradingStatus::OPEN;
-    case LIMIT_OPEN:
-      return roq::TradingStatus::PRE_OPEN;
-    case OFFLINE:
-      return roq::TradingStatus::CLOSE;
-    case RESTRICTED_API:
-      return roq::TradingStatus::HALT;
-  }
-  return {};
-}
-
-static_assert(Helper{btse_futures::json::TradingStatus{btse_futures::json::TradingStatus::UNDEFINED_INTERNAL}} == roq::TradingStatus::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradingStatus{btse_futures::json::TradingStatus::LISTED}} == roq::TradingStatus::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradingStatus{btse_futures::json::TradingStatus::ONLINE}} == roq::TradingStatus::OPEN);
-static_assert(Helper{btse_futures::json::TradingStatus{btse_futures::json::TradingStatus::LIMIT_OPEN}} == roq::TradingStatus::PRE_OPEN);
-static_assert(Helper{btse_futures::json::TradingStatus{btse_futures::json::TradingStatus::OFFLINE}} == roq::TradingStatus::CLOSE);
-static_assert(Helper{btse_futures::json::TradingStatus{btse_futures::json::TradingStatus::RESTRICTED_API}} == roq::TradingStatus::HALT);
-
-template <>
-template <>
-std::optional<roq::TradingStatus> Map<btse_futures::json::TradingStatus>::helper() const {
   return Helper{args_};
 }
 

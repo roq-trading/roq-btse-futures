@@ -3,31 +3,13 @@
   "type": "enum",
   "values": [
     {
-      "name": "ticker"
+      "name": "tradeHistoryApi"
     },
     {
-      "name": "publicTrade"
+      "name": "snapshotL1"
     },
     {
-      "name": "books"
-    },
-    {
-      "name": "books5"
-    },
-    {
-      "name": "books15"
-    },
-    {
-      "name": "account"
-    },
-    {
-      "name": "position"
-    },
-    {
-      "name": "order"
-    },
-    {
-      "name": "fill"
+      "name": "update"
     }
   ]
 }

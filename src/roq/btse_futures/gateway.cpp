@@ -63,6 +63,7 @@ Gateway::Gateway(server::Dispatcher &dispatcher, Settings const &settings, Confi
 void Gateway::operator()(Event<Start> const &event) {
   log::info("Starting..."sv);
   assert(std::empty(market_data_));
+  assert(std::empty(order_book_));
   dispatch(event);
 }
 
@@ -125,10 +126,6 @@ void Gateway::operator()(Trace<TradeSummary> const &event, bool is_last) {
   dispatcher_(event, is_last);
 }
 
-void Gateway::operator()(Trace<StatisticsUpdate> const &event, bool is_last) {
-  dispatcher_(event, is_last);
-}
-
 void Gateway::operator()(Trace<TradeUpdate> const &event, bool is_last, uint8_t user_id, std::string_view const &request_id) {
   dispatcher_(event, is_last, user_id, request_id);
 }
@@ -151,12 +148,20 @@ void Gateway::operator()(Rest::SymbolsUpdate &symbols_update) {
 
 void Gateway::ensure_symbol_slices(size_t size) {
   while (std::size(market_data_) < size) {
-    log::debug("Create market-data (user-stream)"sv);
+    log::debug("Create market-data (stream)"sv);
     auto market_data = std::make_unique<MarketData>(*this, context_, ++stream_id_, shared_, std::size(market_data_));
     MessageInfo message_info;
     Start start;
     create_event_and_dispatch(*market_data, message_info, start);
     market_data_.emplace_back(std::move(market_data));
+  }
+  while (std::size(order_book_) < size) {
+    log::debug("Create order-book (stream)"sv);
+    auto order_book = std::make_unique<OrderBook>(*this, context_, ++stream_id_, shared_, std::size(order_book_));
+    MessageInfo message_info;
+    Start start;
+    create_event_and_dispatch(*order_book, message_info, start);
+    order_book_.emplace_back(std::move(order_book));
   }
 }
 
@@ -214,6 +219,9 @@ void Gateway::dispatch_helper(auto &self, Args &&...args) {
     }
   }
   for (auto &iter : self.market_data_) {
+    helper(*iter);
+  }
+  for (auto &iter : self.order_book_) {
     helper(*iter);
   }
 }

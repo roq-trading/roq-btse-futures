@@ -49,7 +49,7 @@ Supports
       :widths: auto
 
       * - Spot
-        - |checkmark|
+        -
       * - Futures
         - |checkmark|
       * - Options
@@ -75,7 +75,7 @@ Supports
       * - Trade Summary
         - |checkmark|
       * - Statistics
-        - |checkmark|
+        -
       * - Time Series
         -
 
@@ -142,6 +142,15 @@ Environments
       $ $CONDA_PREFIX/share/roq-btse-futures/flags/prod/flags.cfg
 
    .. include:: flags/prod/flags.cfg
+     :code: shell
+
+.. tab:: Test
+
+   .. code-block:: shell
+
+      $ $CONDA_PREFIX/share/roq-btse-futures/flags/test/flags.cfg
+
+   .. include:: flags/test/flags.cfg
      :code: shell
 
 

@@ -32,7 +32,7 @@ auto const SUPPORTS = Mask{
 
 auto const PING = "ping"sv;
 
-size_t const MAX_DECODE_BUFFER_DEPTH = 2;
+size_t const MAX_DECODE_BUFFER_DEPTH = 1;
 }  // namespace
 
 // === HELPERS ===
@@ -231,29 +231,18 @@ void DropCopy::parse(std::string_view const &message) {
   });
 }
 
-void DropCopy::operator()(Trace<json::Pong> const &event) {
-  auto &[trace_info, pong] = event;
-  log::warn("DEBUG pong={}"sv, pong);
+void DropCopy::operator()(Trace<json::Pong> const &) {
 }
 
-void DropCopy::operator()(Trace<json::Ack> const &event) {
-  auto &[trace_info, ack] = event;
-  log::warn("DEBUG ack={}"sv, ack);
-}
-
-void DropCopy::operator()(Trace<json::Book> const &) {
+void DropCopy::operator()(Trace<json::TradeHistory> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::Trades> const &) {
+void DropCopy::operator()(Trace<json::SnapshotL1> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::Market24h> const &) {
-  log::fatal("Unexpected"sv);
-}
-
-void DropCopy::operator()(Trace<json::Kline> const &) {
+void DropCopy::operator()(Trace<json::Update> const &) {
   log::fatal("Unexpected"sv);
 }
 

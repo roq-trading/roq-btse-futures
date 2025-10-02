@@ -11,8 +11,7 @@
       "type": "std/string_view"
     },
     {
-      "name": "category",
-      "type": "roq/btse_futures/json/Category"
+      "name": "category"
     },
     {
       "name": "symbol",

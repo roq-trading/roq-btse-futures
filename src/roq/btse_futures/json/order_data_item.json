@@ -3,8 +3,7 @@
   "type": "dictionary",
   "values": [
     {
-      "name": "category",
-      "type": "roq/btse_futures/json/CategoryWS"
+      "name": "category"
     },
     {
       "name": "symbol",

@@ -7,6 +7,7 @@
 
 #include "roq/mask.hpp"
 
+#include "roq/utils/safe_cast.hpp"
 #include "roq/utils/update.hpp"
 
 #include "roq/utils/metrics/factory.hpp"
@@ -83,8 +84,8 @@ Rest::Rest(Handler &handler, io::Context &context, uint16_t stream_id, Shared &s
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
       profile_{
-          .products = create_metrics(shared.settings, name_, "products"sv),
-          .products_ack = create_metrics(shared.settings, name_, "products_ack"sv),
+          .market_summary = create_metrics(shared.settings, name_, "market_summary"sv),
+          .market_summary_ack = create_metrics(shared.settings, name_, "market_summary_ack"sv),
       },
       latency_{
           .ping = create_metrics(shared.settings, name_, "ping"sv),
@@ -110,8 +111,8 @@ void Rest::operator()(metrics::Writer &writer) const {
       // counter
       .write(counter_.disconnect, metrics::Type::COUNTER)
       // profile
-      .write(profile_.products, metrics::Type::PROFILE)
-      .write(profile_.products_ack, metrics::Type::PROFILE)
+      .write(profile_.market_summary, metrics::Type::PROFILE)
+      .write(profile_.market_summary_ack, metrics::Type::PROFILE)
       // latency
       .write(latency_.ping, metrics::Type::LATENCY);
 }
@@ -172,8 +173,8 @@ uint32_t Rest::download(RestState state) {
     case UNDEFINED:
       assert(false);
       break;
-    case PRODUCTS:
-      get_products();
+    case MARKET_SUMMARY:
+      get_market_summary();
       return 1;
     case DONE:
       (*this)(ConnectionStatus::READY);
@@ -183,15 +184,14 @@ uint32_t Rest::download(RestState state) {
   return 0;
 }
 
-// products
+// market_summary
 
-void Rest::get_products() {
-  profile_.products([&]() {
-    auto query = fmt::format("?category={}"sv, shared_.api.category);
+void Rest::get_market_summary() {
+  profile_.market_summary([&]() {
     auto request = web::rest::Request{
         .method = web::http::Method::GET,
-        .path = shared_.api.market_data.products,
-        .query = query,
+        .path = shared_.api.market_data.market_summary,
+        .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
         .headers = {},
@@ -199,17 +199,17 @@ void Rest::get_products() {
         .quality_of_service = {},
     };
     auto sequence = download_.sequence();
-    (*connection_)("products"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+    (*connection_)("market_summary"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
       TraceInfo trace_info;
       Trace event{trace_info, response};
-      get_products_ack(event, sequence);
+      get_market_summary_ack(event, sequence);
     });
   });
 }
 
-void Rest::get_products_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto const state = RestState::PRODUCTS;
-  profile_.products_ack([&]() {
+void Rest::get_market_summary_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
+  auto const state = RestState::MARKET_SUMMARY;
+  profile_.market_summary_ack([&]() {
     auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
@@ -219,29 +219,25 @@ void Rest::get_products_ack(Trace<web::rest::Response> const &event, uint32_t se
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::Products products{body, decode_buffer_};
-        if (products.code == 0) {
-          Trace event{trace_info, products};
-          (*this)(event);
-          download_.check(state);
-        } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(products.code), products.msg);
-        }
+        json::MarketSummary market_summary{body, decode_buffer_};
+        Trace event{trace_info, market_summary};
+        (*this)(event);
+        download_.check(state);
       }
     };
     process_response(event, handle_error, handle_success);
   });
 }
 
-void Rest::operator()(Trace<json::Products> const &event) {
-  auto &[trace_info, products] = event;
-  log::info<4>("products={}"sv, products);
-  auto &data = products.data;
+void Rest::operator()(Trace<json::MarketSummary> const &event) {
+  auto &[trace_info, market_summary] = event;
+  log::info<4>("market_summary={}"sv, market_summary);
+  auto &data = market_summary.data;
   std::vector<Symbol> symbols;
-  symbols.reserve(std::size(data.products));
+  symbols.reserve(std::size(data));
   size_t counter = 0;
-  for (size_t i = 0; i < std::size(data.products); ++i) {
-    auto &item = data.products[i];
+  for (size_t i = 0; i < std::size(data); ++i) {
+    auto &item = data[i];
     log::info<2>("item={}"sv, item);
     if (shared_.discard_symbol(item.symbol)) {
       continue;
@@ -255,27 +251,27 @@ void Rest::operator()(Trace<json::Products> const &event) {
         .exchange = shared_.settings.exchange,
         .symbol = item.symbol,
         .description = {},
-        .security_type = {},
+        .security_type = {},  // time_based_contract ???
         .cfi_code = {},
-        .base_currency = {},
-        .quote_currency = {},
+        .base_currency = item.base,
+        .quote_currency = item.quote,
         .settlement_currency = {},
         .margin_currency = {},
         .commission_currency = {},
-        .tick_size = item.tick_size,
+        .tick_size = item.min_price_increment,
         .tick_size_steps = {},
         .multiplier = NaN,
         .min_notional = NaN,
-        .min_trade_vol = NaN,
-        .max_trade_vol = NaN,
-        .trade_vol_step_size = NaN,
+        .min_trade_vol = item.min_order_size,
+        .max_trade_vol = item.max_order_size,
+        .trade_vol_step_size = item.min_size_increment,
         .option_type = {},
         .strike_currency = {},
         .strike_price = NaN,
         .underlying = {},
         .time_zone = {},
-        .issue_date = {},
-        .settlement_date = {},
+        .issue_date = utils::safe_cast{item.contract_start},
+        .settlement_date = utils::safe_cast{item.contract_end},  // ???
         .expiry_datetime = {},
         .expiry_datetime_utc = {},
         .exchange_time_utc = {},
@@ -284,18 +280,17 @@ void Rest::operator()(Trace<json::Products> const &event) {
         .discard = {},
     };
     create_trace_and_dispatch(handler_, trace_info, reference_data, true);
-    /*
+    auto trading_status = item.active ? TradingStatus::OPEN : TradingStatus::HALT;
     auto market_status = MarketStatus{
         .stream_id = stream_id_,
         .exchange = shared_.settings.exchange,
         .symbol = item.symbol,
-        .trading_status = map(item.status),
+        .trading_status = trading_status,
         .exchange_time_utc = {},
         .exchange_sequence = {},
-        .sending_time_utc = products.request_time,
+        .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, market_status, true);
-    */
   }
   if (!std::empty(symbols)) {
     auto symbols_update = SymbolsUpdate{
@@ -304,7 +299,7 @@ void Rest::operator()(Trace<json::Products> const &event) {
     handler_(symbols_update);
   }
   if (counter > 0) [[unlikely]] {
-    log::info("Symbols {} / {}"sv, counter, std::size(data.products));
+    log::info("Symbols {} / {}"sv, counter, std::size(data));
   }
 }
 

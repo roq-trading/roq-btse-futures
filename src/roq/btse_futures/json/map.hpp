@@ -9,18 +9,12 @@
 #include "roq/order_status.hpp"
 #include "roq/order_type.hpp"
 #include "roq/position_effect.hpp"
-#include "roq/security_type.hpp"
 #include "roq/side.hpp"
 #include "roq/time_in_force.hpp"
-#include "roq/trading_status.hpp"
-#include "roq/update_type.hpp"
 
 #include "roq/btse_futures/json/action.hpp"
 #include "roq/btse_futures/json/asset_mode.hpp"
-#include "roq/btse_futures/json/category.hpp"
-#include "roq/btse_futures/json/futures_type.hpp"
 #include "roq/btse_futures/json/margin_mode.hpp"
-#include "roq/btse_futures/json/message_type.hpp"
 #include "roq/btse_futures/json/order_status.hpp"
 #include "roq/btse_futures/json/order_type.hpp"
 #include "roq/btse_futures/json/pos_side.hpp"
@@ -28,7 +22,6 @@
 #include "roq/btse_futures/json/time_in_force.hpp"
 #include "roq/btse_futures/json/trade_scope.hpp"
 #include "roq/btse_futures/json/trade_side.hpp"
-#include "roq/btse_futures/json/trading_status.hpp"
 
 namespace roq {
 
@@ -44,15 +37,7 @@ std::optional<MarginMode> Map<btse_futures::json::AssetMode>::helper() const;
 
 template <>
 template <>
-std::optional<SecurityType> Map<btse_futures::json::Category, btse_futures::json::FuturesType>::helper() const;
-
-template <>
-template <>
 std::optional<MarginMode> Map<btse_futures::json::MarginMode>::helper() const;
-
-template <>
-template <>
-std::optional<UpdateType> Map<btse_futures::json::MessageType>::helper() const;
 
 template <>
 template <>
@@ -81,10 +66,6 @@ std::optional<Liquidity> Map<btse_futures::json::TradeScope>::helper() const;
 template <>
 template <>
 std::optional<PositionEffect> Map<btse_futures::json::TradeSide>::helper() const;
-
-template <>
-template <>
-std::optional<TradingStatus> Map<btse_futures::json::TradingStatus>::helper() const;
 
 // roq => btse_futures::json
 

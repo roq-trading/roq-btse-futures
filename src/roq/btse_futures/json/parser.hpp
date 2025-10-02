@@ -9,13 +9,12 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/btse_futures/json/ack.hpp"
 #include "roq/btse_futures/json/pong.hpp"
 
-#include "roq/btse_futures/json/book.hpp"
-#include "roq/btse_futures/json/kline.hpp"
-#include "roq/btse_futures/json/market24h.hpp"
-#include "roq/btse_futures/json/trades.hpp"
+#include "roq/btse_futures/json/trade_history.hpp"
+
+#include "roq/btse_futures/json/snapshot_l1.hpp"
+#include "roq/btse_futures/json/update.hpp"
 
 #include "roq/btse_futures/json/login.hpp"
 
@@ -31,12 +30,11 @@ namespace json {
 struct Parser final {
   struct Handler {
     virtual void operator()(Trace<json::Pong> const &) = 0;
-    virtual void operator()(Trace<json::Ack> const &) = 0;
     //
-    virtual void operator()(Trace<json::Book> const &) = 0;
-    virtual void operator()(Trace<json::Trades> const &) = 0;
-    virtual void operator()(Trace<json::Market24h> const &) = 0;
-    virtual void operator()(Trace<json::Kline> const &) = 0;
+    virtual void operator()(Trace<json::TradeHistory> const &) = 0;
+    //
+    virtual void operator()(Trace<json::SnapshotL1> const &) = 0;
+    virtual void operator()(Trace<json::Update> const &) = 0;
     //
     virtual void operator()(Trace<json::Login> const &) = 0;
     virtual void operator()(Trace<json::Account> const &) = 0;

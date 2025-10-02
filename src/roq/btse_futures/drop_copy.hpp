@@ -59,13 +59,12 @@ class DropCopy final : public web::socket::Client::Handler, json::Parser::Handle
   void operator()(web::socket::Client::Binary const &) override;
 
   void operator()(Trace<json::Pong> const &) override;
-  void operator()(Trace<json::Ack> const &) override;
-
-  void operator()(Trace<json::Book> const &) override;
-  void operator()(Trace<json::Trades> const &) override;
-  void operator()(Trace<json::Market24h> const &) override;
-  void operator()(Trace<json::Kline> const &) override;
-
+  //
+  void operator()(Trace<json::TradeHistory> const &) override;
+  //
+  void operator()(Trace<json::SnapshotL1> const &) override;
+  void operator()(Trace<json::Update> const &) override;
+  //
   void operator()(Trace<json::Login> const &) override;
   void operator()(Trace<json::Account> const &) override;
   void operator()(Trace<json::Position> const &) override;
