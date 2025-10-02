@@ -31,6 +31,8 @@ auto const SUPPORTS = Mask{
 size_t const MAX_DECODE_BUFFER_DEPTH = 2;
 
 auto const PING = "ping"sv;
+
+uint16_t const MAX_DEPTH = 50;
 }  // namespace
 
 // === HELPERS ===
@@ -271,7 +273,7 @@ void OrderBook::operator()(Trace<json::SnapshotL1> const &event) {
             .ask_price = price_helper(data.asks),
             .ask_quantity = size_helper(data.asks),
         },
-        .update_type = UpdateType::INCREMENTAL,  // ???
+        .update_type = UpdateType::INCREMENTAL,
         .exchange_time_utc = data.timestamp,
         .exchange_sequence = {},
         .sending_time_utc = {},
@@ -321,7 +323,7 @@ void OrderBook::operator()(Trace<json::Update> const &event) {
         .sending_time_utc = {},
         .price_precision = {},
         .quantity_precision = {},
-        .max_depth = {},
+        .max_depth = MAX_DEPTH,
         .checksum = {},
     };
     create_trace_and_dispatch(handler_, trace_info, market_by_price_update, true);

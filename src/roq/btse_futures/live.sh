@@ -14,7 +14,7 @@ CONFIG="${CONFIG:-$NAME}"
 
 CONFIG_FILE="$ROQ_CONFIG_PATH/roq-btse-futures/$CONFIG.toml"
 
-FLAGFILE="../../../share/flags/test/flags.cfg"
+FLAGFILE="../../../share/flags/prod/flags.cfg"
 
 $PREFIX ./roq-btse-futures \
   --name "$NAME" \

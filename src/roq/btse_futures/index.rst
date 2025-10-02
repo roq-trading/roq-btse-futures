@@ -497,3 +497,5 @@ Constraints
 
 Comments
 --------
+
+* TODO check if order book max-depth is 50 for incremental updates
