@@ -11,6 +11,7 @@
 #include "roq/position_effect.hpp"
 #include "roq/side.hpp"
 #include "roq/time_in_force.hpp"
+#include "roq/update_type.hpp"
 
 #include "roq/btse_futures/json/action.hpp"
 #include "roq/btse_futures/json/asset_mode.hpp"
@@ -22,6 +23,7 @@
 #include "roq/btse_futures/json/time_in_force.hpp"
 #include "roq/btse_futures/json/trade_scope.hpp"
 #include "roq/btse_futures/json/trade_side.hpp"
+#include "roq/btse_futures/json/type.hpp"
 
 namespace roq {
 
@@ -66,6 +68,10 @@ std::optional<Liquidity> Map<btse_futures::json::TradeScope>::helper() const;
 template <>
 template <>
 std::optional<PositionEffect> Map<btse_futures::json::TradeSide>::helper() const;
+
+template <>
+template <>
+std::optional<UpdateType> Map<btse_futures::json::Type>::helper() const;
 
 // roq => btse_futures::json
 

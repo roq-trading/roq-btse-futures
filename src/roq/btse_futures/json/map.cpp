@@ -436,6 +436,35 @@ std::optional<roq::PositionEffect> Map<btse_futures::json::TradeSide>::helper() 
   return Helper{args_};
 }
 
+// btse_futures::json::Type => roq::UpdateType
+
+template <>
+template <>
+constexpr Helper<btse_futures::json::Type>::operator std::optional<roq::UpdateType>() const {
+  switch (std::get<0>(args_)) {
+    using enum btse_futures::json::Type::type_t;
+    case UNDEFINED_INTERNAL:
+      return roq::UpdateType::UNDEFINED;
+    case UNKNOWN_INTERNAL:
+      return roq::UpdateType::UNDEFINED;
+    case SNAPSHOT:
+      return roq::UpdateType::SNAPSHOT;
+    case DELTA:
+      return roq::UpdateType::INCREMENTAL;
+  }
+  return {};
+}
+
+static_assert(Helper{btse_futures::json::Type{btse_futures::json::Type::UNDEFINED_INTERNAL}} == roq::UpdateType::UNDEFINED);
+static_assert(Helper{btse_futures::json::Type{btse_futures::json::Type::SNAPSHOT}} == roq::UpdateType::SNAPSHOT);
+static_assert(Helper{btse_futures::json::Type{btse_futures::json::Type::DELTA}} == roq::UpdateType::INCREMENTAL);
+
+template <>
+template <>
+std::optional<roq::UpdateType> Map<btse_futures::json::Type>::helper() const {
+  return Helper{args_};
+}
+
 // roq => btse_futures::json
 
 // roq::MarginMode => btse_futures::json::MarginMode

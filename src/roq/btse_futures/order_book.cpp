@@ -4,11 +4,14 @@
 
 #include "roq/logging.hpp"
 
+#include "roq/utils/safe_cast.hpp"
 #include "roq/utils/update.hpp"
 
 #include "roq/utils/exceptions/unhandled.hpp"
 
 #include "roq/utils/metrics/factory.hpp"
+
+#include "roq/btse_futures/json/map.hpp"
 
 using namespace std::literals;
 
@@ -268,7 +271,7 @@ void OrderBook::operator()(Trace<json::SnapshotL1> const &event) {
             .ask_price = price_helper(data.asks),
             .ask_quantity = size_helper(data.asks),
         },
-        .update_type = UpdateType::INCREMENTAL,
+        .update_type = UpdateType::INCREMENTAL,  // ???
         .exchange_time_utc = data.timestamp,
         .exchange_sequence = {},
         .sending_time_utc = {},
@@ -281,7 +284,47 @@ void OrderBook::operator()(Trace<json::Update> const &event) {
   profile_.update([&]() {
     auto &[trace_info, update] = event;
     log::info<3>("update={}"sv, update);
+    auto helper = [&](auto &result, auto &item) {
+      auto mbp_update = MBPUpdate{
+          .price = item.price,
+          .quantity = item.size,
+          .implied_quantity = NaN,
+          .number_of_orders = {},
+          .update_action = {},
+          .price_level = {},
+      };
+      result.emplace_back(std::move(mbp_update));
+    };
     auto &data = update.data;
+    auto &bids = shared_.bids;
+    auto &asks = shared_.asks;
+    bids.clear();
+    asks.clear();
+    for (auto &item : data.bids) {
+      helper(bids, item);
+    }
+    for (auto &item : data.asks) {
+      helper(asks, item);
+    }
+    if (std::empty(bids) && std::empty(asks)) {
+      return;
+    }
+    auto market_by_price_update = MarketByPriceUpdate{
+        .stream_id = stream_id_,
+        .exchange = shared_.settings.exchange,
+        .symbol = data.symbol,
+        .bids = bids,
+        .asks = asks,
+        .update_type = map(data.type),
+        .exchange_time_utc = data.timestamp,
+        .exchange_sequence = utils::safe_cast{data.seq_num},
+        .sending_time_utc = {},
+        .price_precision = {},
+        .quantity_precision = {},
+        .max_depth = {},
+        .checksum = {},
+    };
+    create_trace_and_dispatch(handler_, trace_info, market_by_price_update, true);
   });
 }
 
