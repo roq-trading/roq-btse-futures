@@ -1,6 +1,7 @@
 .. _roq-btse-futures:
 
 .. |checkmark| unicode:: U+2713
+.. |checkmark-2| unicode:: U+2021
 
 roq-btse-futures
 ================
@@ -63,9 +64,9 @@ Supports
       :widths: auto
 
       * - Reference Data
-        - |checkmark|
+        - |checkmark-2|
       * - Market Status
-        - (|checkmark|)
+        - |checkmark-2|
       * - Top of Book
         - |checkmark|
       * - Market by Price
@@ -103,7 +104,10 @@ Supports
       * - Positions
         - |checkmark|
       * - Funds
-        - |checkmark|
+        -
+
+
+|checkmark-2| There are no live updates for reference data and market status
 
 
 .. _roq-btse-futures-flags:
@@ -271,22 +275,7 @@ Market Data
 Statistics
 ~~~~~~~~~~
 
-.. list-table::
-  :header-rows: 1
-  :widths: auto
-
-  * - Type
-    - Comments
-
-  * - :cpp:class:`HIGHEST_TRADED_PRICE`
-    - (ticker) :code:`high24h`
-
-  * - :cpp:class:`LOWEST_TRADED_PRICE`
-    - (ticker) :code:`low24h`
-
-  * - :cpp:class:`TRADE_VOLUME`
-    - (ticker) :code:`quoteVolume`
-
+Not available.
 
 
 Order Management
@@ -491,11 +480,28 @@ Streams
 Constraints
 -----------
 
-* There is no live update of reference data or trading status
-* Stop orders are not supported
+* TODO order management hasn't been implemented
 
 
 Comments
 --------
 
-* TODO check if order book max-depth is 50 for incremental updates
+* TODO check if order book max-depth is really 50 when applying incremental updates
+
+
+References
+----------
+
+Common
+~~~~~~
+
+* :ref:`Using Conda <tutorial-conda>`
+* :ref:`Using Flags <abseil-cpp>`
+* :ref:`Gateway Flags <gateway-flags>`
+* :ref:`Gateway Config <gateway-config>`
+
+Exchange
+~~~~~~~~
+
+* `Website <https://www.btse.com/>`__
+* `Documentation <https://btsecom.github.io/docs/futures/>`__

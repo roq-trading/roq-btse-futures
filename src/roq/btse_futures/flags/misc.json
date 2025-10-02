@@ -16,12 +16,6 @@
       "description": "Request limit monitor interval"
     },
     {
-      "name": "self_trade_prevention",
-      "type": "std/string",
-      "default": "CN",
-      "description": "Self-trade prevention: CN, CO, CB, DC"
-    },
-    {
       "name": "encode_buffer_size",
       "type": "std/uint32",
       "required": true,
@@ -40,6 +34,12 @@
       "type": "std/bool",
       "default": false,
       "description": "Allow price inversion?"
+    },
+    {
+      "name": "mbp_max_depth",
+      "type": "std/uint16",
+      "default": 50,
+      "description": "Order-book max-depth (exchange limit)"
     }
   ]
 }

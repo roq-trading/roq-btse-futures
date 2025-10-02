@@ -72,13 +72,6 @@
       "description": "Download fills since (now - begin)"
     },
     {
-      "name": "token_refresh_freq",
-      "type": "std/nanoseconds",
-      "validator": "roq/flags/validators/TimePeriod",
-      "default": "8h",
-      "description": "Token refresh frequency"
-    },
-    {
       "name": "cancel_on_disconnect",
       "type": "std/bool",
       "default": false,
