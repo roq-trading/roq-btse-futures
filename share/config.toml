@@ -1,3 +1,5 @@
+# config template for the roq-btse-futures gateway
+
 symbols = [
  "^BTCUSDT$",
  "^BTCPERP$",
