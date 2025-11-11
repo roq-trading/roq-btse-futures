@@ -182,7 +182,7 @@ void MarketData::operator()(ConnectionStatus status) {
   }
 }
 
-void MarketData::ping(std::chrono::nanoseconds now) {
+void MarketData::ping([[maybe_unused]] std::chrono::nanoseconds now) {
   (*connection_).send_text(PING);
 }
 
