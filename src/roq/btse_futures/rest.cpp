@@ -239,13 +239,7 @@ void Rest::operator()(Trace<json::MarketSummary> const &event) {
   for (size_t i = 0; i < std::size(data); ++i) {
     auto &item = data[i];
     log::info<2>("item={}"sv, item);
-    if (shared_.discard_symbol(item.symbol)) {
-      continue;
-    }
-    if (all_symbols_.emplace(item.symbol).second) {  // only include new
-      symbols.emplace_back(item.symbol);
-    }
-    ++counter;
+    auto discard = shared_.discard_symbol(item.symbol);
     auto reference_data = ReferenceData{
         .stream_id = stream_id_,
         .exchange = shared_.settings.exchange,
@@ -277,9 +271,13 @@ void Rest::operator()(Trace<json::MarketSummary> const &event) {
         .exchange_time_utc = {},
         .exchange_sequence = {},
         .sending_time_utc = {},
-        .discard = {},
+        .discard = discard,
     };
     create_trace_and_dispatch(handler_, trace_info, reference_data, true);
+    if (discard) {
+      log::info<1>(R"(Drop symbol="{}")"sv, item.symbol);
+      continue;
+    }
     auto trading_status = item.active ? TradingStatus::OPEN : TradingStatus::HALT;
     auto market_status = MarketStatus{
         .stream_id = stream_id_,
@@ -291,6 +289,10 @@ void Rest::operator()(Trace<json::MarketSummary> const &event) {
         .sending_time_utc = {},
     };
     create_trace_and_dispatch(handler_, trace_info, market_status, true);
+    if (all_symbols_.emplace(item.symbol).second) {  // only include new
+      symbols.emplace_back(item.symbol);
+    }
+    ++counter;
   }
   if (!std::empty(symbols)) {
     auto symbols_update = SymbolsUpdate{
