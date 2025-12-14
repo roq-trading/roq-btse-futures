@@ -20,9 +20,11 @@ class Account final {
 
   Account(Account const &) = delete;
 
-  std::string create_ws_login();
+  std::string create_ws_login(std::string_view const &path);
 
-  std::string create_headers(web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body);
+  std::string create_headers(std::string_view const &path) { return create_headers(path, {}); }
+
+  std::string create_headers(std::string_view const &path, std::string_view const &body);
 
   std::string const name;
 

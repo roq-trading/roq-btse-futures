@@ -10,7 +10,7 @@ fi
 
 NAME="btse-futures"
 
-CONFIG="${CONFIG:-$NAME}"
+CONFIG="${CONFIG:-$NAME-testnet}"
 
 CONFIG_FILE="$ROQ_CONFIG_PATH/roq-btse-futures/$CONFIG.toml"
 
@@ -24,4 +24,5 @@ $PREFIX ./roq-btse-futures \
   --event_log_dir "$HOME/var/lib/roq/data" \
   --client_listen_address "$HOME/run/$NAME.sock" \
   --service_listen_address "$HOME/run/metrics/${NAME}.sock" \
+  --cache_all_reference_data=true \
   $@

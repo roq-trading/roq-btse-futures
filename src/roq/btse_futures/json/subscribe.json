@@ -1,5 +1,5 @@
 {
-  "name": "roq/btse_futures/json/Login",
+  "name": "roq/btse_futures/json/Subscribe",
   "type": "dictionary",
   "values": [
     {
@@ -7,8 +7,9 @@
       "type": "roq/btse_futures/json/Event"
     },
     {
-      "name": "success",
-      "type": "std/bool"
+      "name": "channel",
+      "type": "std/string_view",
+      "array": "std/span"
     }
   ]
 }

@@ -4,15 +4,19 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/btse_futures/json/market_summary.hpp"
+#include "roq/btse_futures/json/get_market_summary_ack.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
 
 using namespace std::literals;
 
+using namespace Catch::literals;
+
+using value_type = json::GetMarketSummaryAck;
+
 // note! reduced
-TEST_CASE("simple", "[json_market_summary]") {
+TEST_CASE("simple", "[json_get_market_summary_ack]") {
   auto message = R"([{)"
                  R"("symbol":"TIAPFC",)"
                  R"("last":0.001,)"
@@ -79,6 +83,10 @@ TEST_CASE("simple", "[json_market_summary]") {
                  R"("availableSettlement":["USD","USDT","USDC","BTC","ETH","AED","AUD","CAD","CHF","EUR","GBP","HKD","INR","JPY","MYR","NZD","SGD"])"
                  R"(})"
                  R"(])";
-  core::json::BufferStack buffer{65536, 1};
-  [[maybe_unused]] json::MarketSummary obj{message, buffer};
+  auto helper = [&](value_type &obj) {
+    // CHECK(obj.status == json::Status::OK);
+  };
+  core::json::BufferStack buffers{8192, 2};
+  value_type obj{message, buffers};
+  helper(obj);
 }

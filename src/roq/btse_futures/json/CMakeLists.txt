@@ -5,15 +5,9 @@ set(SOURCES encoder.cpp map.cpp parser.cpp utils.cpp)
 include(RoqAutogen)
 
 set(AUTOGEN_SCHEMAS
-    account_assets_data_assets_item.json
-    account_assets_data.json
-    account_assets.json
+    subscribe.json
     account_data_item_coin_item.json
     account_data_item.json
-    account_info_data_coin_config_item.json
-    account_info_data.json
-    account_info_data_symbol_config_item.json
-    account_info.json
     account.json
     account_mode.json
     action.json
@@ -24,27 +18,26 @@ set(AUTOGEN_SCHEMAS
     cancel_all_orders_ack.json
     cancel_order_ack_data.json
     cancel_order_ack.json
+    error.json
     event.json
     fill_data_item_fee_detail_item.json
     fill_data_item.json
-    fill_history_data.json
-    fill_history_data_list_item_fee_detail_item.json
-    fill_history_data_list_item.json
-    fill_history.json
     fill.json
+    get_market_summary_ack_item.json
+    get_market_summary_ack.json
+    get_open_orders_ack.json
+    get_position_mode_ack_item.json
+    get_position_mode_ack.json
+    get_positions_ack.json
+    get_wallet_ack_item_assets_item.json
+    get_wallet_ack_item.json
+    get_wallet_ack.json
     hold_mode.json
     hold_side.json
     login.json
     margin_mode.json
-    market_summary_item.json
-    market_summary.json
-    message.json
     modify_order_ack_data.json
     modify_order_ack.json
-    open_orders_data.json
-    open_orders_data_list_item_fee_detail_item.json
-    open_orders_data_list_item.json
-    open_orders.json
     order_data_item_fee_detail_item.json
     order_data_item.json
     order.json
@@ -53,10 +46,8 @@ set(AUTOGEN_SCHEMAS
     order_type.json
     place_order_ack_data.json
     place_order_ack.json
+    pong.json
     position_data_item.json
-    position_info_data.json
-    position_info_data_list_item.json
-    position_info.json
     position.json
     position_status.json
     pos_mode.json

@@ -2,14 +2,16 @@
 
 #include <catch2/catch_all.hpp>
 
-#include "roq/core/json/buffer_stack.hpp"
-
-#include "roq/btse_futures/json/update.hpp"
+#include "parser_tester.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
 
 using namespace std::literals;
+
+using namespace Catch::literals;
+
+using value_type = json::Update;
 
 // note! truncated
 TEST_CASE("snapshot", "[json_update]") {
@@ -35,8 +37,12 @@ TEST_CASE("snapshot", "[json_update]") {
                  R"("timestamp":1759375303714)"
                  R"(})"
                  R"(})";
-  core::json::BufferStack buffer_stack{8192, 2};
-  json::Update obj{message, buffer_stack};
+  auto helper = [](value_type const &obj) {
+    CHECK(obj.topic == "update:ETHPFC_0"sv);
+    REQUIRE(std::size(obj.data.bids) == 4);
+    REQUIRE(std::size(obj.data.asks) == 4);
+  };
+  ParserTester<value_type>::dispatch(helper, message, 8192, 2);
 }
 
 TEST_CASE("delta", "[json_update]") {
@@ -61,6 +67,10 @@ TEST_CASE("delta", "[json_update]") {
                  R"("timestamp":1759376047437)"
                  R"(})"
                  R"(})";
-  core::json::BufferStack buffer_stack{8192, 2};
-  json::Update obj{message, buffer_stack};
+  auto helper = [](value_type const &obj) {
+    CHECK(obj.topic == "update:BTCPFC_0"sv);
+    REQUIRE(std::size(obj.data.bids) == 3);
+    REQUIRE(std::size(obj.data.asks) == 4);
+  };
+  ParserTester<value_type>::dispatch(helper, message, 8192, 2);
 }

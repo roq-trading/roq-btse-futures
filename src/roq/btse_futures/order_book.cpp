@@ -127,6 +127,8 @@ void OrderBook::subscribe(size_t start_from) {
   }
 }
 
+// web::socket::Client::Handler
+
 void OrderBook::operator()(web::socket::Client::Connected const &) {
 }
 
@@ -244,7 +246,12 @@ void OrderBook::parse(std::string_view const &message) {
   });
 }
 
+// json::Parser::Handler
+
 void OrderBook::operator()(Trace<json::Pong> const &) {
+}
+
+void OrderBook::operator()(Trace<json::Subscribe> const &) {
 }
 
 void OrderBook::operator()(Trace<json::TradeHistory> const &) {

@@ -1,5 +1,5 @@
 {
-  "name": "roq/btse_futures/json/MarketSummaryItem",
+  "name": "roq/btse_futures/json/GetMarketSummaryAckItem",
   "type": "dictionary",
   "values": [
     {
@@ -123,7 +123,17 @@
       "type": "std/double"
     },
     {
-      "name": "availableSettlement"
+      "name": "availableSettlement",
+      "type": "std/string_view",
+      "array": "std/span"
+    },
+    {
+      "name": "minPositionsUSDValue",
+      "type": "std/double"
+    },
+    {
+      "name": "maxPositionsUSDValue",
+      "type": "std/double"
     }
   ]
 }

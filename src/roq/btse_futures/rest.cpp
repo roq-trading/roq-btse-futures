@@ -219,8 +219,8 @@ void Rest::get_market_summary_ack(Trace<web::rest::Response> const &event, uint3
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::MarketSummary market_summary{body, decode_buffer_};
-        Trace event{trace_info, market_summary};
+        json::GetMarketSummaryAck market_summary_ack{body, decode_buffer_};
+        Trace event{trace_info, market_summary_ack};
         (*this)(event);
         download_.check(state);
       }
@@ -229,10 +229,10 @@ void Rest::get_market_summary_ack(Trace<web::rest::Response> const &event, uint3
   });
 }
 
-void Rest::operator()(Trace<json::MarketSummary> const &event) {
-  auto &[trace_info, market_summary] = event;
-  log::info<4>("market_summary={}"sv, market_summary);
-  auto &data = market_summary.data;
+void Rest::operator()(Trace<json::GetMarketSummaryAck> const &event) {
+  auto &[trace_info, market_summary_ack] = event;
+  log::info<4>("market_summary_ack={}"sv, market_summary_ack);
+  auto &data = market_summary_ack.data;
   std::vector<Symbol> symbols;
   symbols.reserve(std::size(data));
   size_t counter = 0;

@@ -2,8 +2,6 @@
 
 #include "roq/btse_futures/account.hpp"
 
-#include "roq/utils/safe_cast.hpp"
-
 #include "roq/clock.hpp"
 
 namespace roq {
@@ -15,14 +13,14 @@ Account::Account(Config const &config, std::string_view const &name)
     : name(name), crypto_(config.get_api_key(name), config.get_secret(name), config.get_passphrase(name)) {
 }
 
-std::string Account::create_ws_login() {
-  auto now = clock::get_realtime();
-  return crypto_.create_ws_login(utils::safe_cast(now));
+std::string Account::create_ws_login(std::string_view const &path) {
+  auto now_utc = clock::get_realtime<std::chrono::milliseconds>();
+  return crypto_.create_ws_login(path, now_utc);
 }
 
-std::string Account::create_headers(web::http::Method method, std::string_view const &path, std::string_view const &query, std::string_view const &body) {
-  auto now = clock::get_realtime();
-  return crypto_.create_headers(method, path, query, body, utils::safe_cast(now));
+std::string Account::create_headers(std::string_view const &path, std::string_view const &body) {
+  auto now_utc = clock::get_realtime<std::chrono::milliseconds>();
+  return crypto_.create_headers(path, now_utc, body);
 }
 
 }  // namespace btse_futures

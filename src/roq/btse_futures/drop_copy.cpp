@@ -125,6 +125,8 @@ void DropCopy::operator()(metrics::Writer &writer) const {
       .write(latency_.heartbeat, metrics::Type::LATENCY);
 }
 
+// web::socket::Client::Handler
+
 void DropCopy::operator()(web::socket::Client::Connected const &) {
   assert(logon_timeout_.count() == 0);
   auto now = clock::get_system();
@@ -188,16 +190,16 @@ void DropCopy::operator()(ConnectionStatus status) {
 }
 
 void DropCopy::login() {
-  auto message = account_.create_ws_login();
-  log::debug("message={}"sv, message);
+  auto message = account_.create_ws_login("/ws/futures"sv);
+  log::warn("DEBUG message={}"sv, message);
   (*connection_).send_text(message);
 }
 
 void DropCopy::subscribe() {
-  subscribe("account"sv);
-  subscribe("position"sv);
-  subscribe("order"sv);
-  subscribe("fill"sv);
+  subscribe("positionsV3"sv);
+  subscribe("allPositionV4"sv);
+  subscribe("notificationApiV4"sv);
+  subscribe("fillsV2"sv);
 }
 
 void DropCopy::subscribe(std::string_view const &topic) {
@@ -205,11 +207,7 @@ void DropCopy::subscribe(std::string_view const &topic) {
   auto message = fmt::format(
       R"({{)"
       R"("op":"subscribe",)"
-      R"("args":[{{)"
-      R"("instType":"UTA",)"
-      R"("topic":"{}")"
-      R"(}})"
-      R"(])"
+      R"("args":["{}"])"
       R"(}})"sv,
       topic);
   log::debug("message={}"sv, message);
@@ -217,6 +215,7 @@ void DropCopy::subscribe(std::string_view const &topic) {
 }
 
 void DropCopy::parse(std::string_view const &message) {
+  log::warn("DEBUG message={}"sv, message);
   profile_.parse([&]() {
     auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
     try {
@@ -231,7 +230,12 @@ void DropCopy::parse(std::string_view const &message) {
   });
 }
 
+// json::Parser::Handler
+
 void DropCopy::operator()(Trace<json::Pong> const &) {
+}
+
+void DropCopy::operator()(Trace<json::Subscribe> const &) {
 }
 
 void DropCopy::operator()(Trace<json::TradeHistory> const &) {
@@ -249,7 +253,7 @@ void DropCopy::operator()(Trace<json::Update> const &) {
 void DropCopy::operator()(Trace<json::Login> const &event) {
   auto &[trace_info, login] = event;
   log::info<2>("login={}"sv, login);
-  if (login.code != 0) {
+  if (!login.success) {
     log::fatal("Unexpected: login={}"sv, login);
   }
   subscribe();

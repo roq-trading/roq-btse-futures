@@ -17,16 +17,17 @@ struct API final {
   } market_data;
 
   struct {
-    std::string_view account_info;
-    std::string_view account_assets;
-    std::string_view position_info;
+    std::string_view position_mode;
+    std::string_view wallet;
+    std::string_view unified_wallet;
+    std::string_view wallet_margin;
+    std::string_view positions;
     std::string_view open_orders;
-    std::string_view fill_history;
-    std::string_view place_order;
-    std::string_view modify_order;
+    std::string_view trade_history;
+    std::string_view create_order;
+    std::string_view amend_order;
     std::string_view cancel_order;
-    std::string_view cancel_all_orders;
-    std::string_view countdown_cancel_all;
+    std::string_view cancel_all_after;
   } order_management;
 
   // factory

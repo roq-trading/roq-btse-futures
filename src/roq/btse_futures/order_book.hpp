@@ -53,6 +53,8 @@ class OrderBook final : public web::socket::Client::Handler, public json::Parser
   void subscribe(size_t start_from = 0);
 
  protected:
+  // web::socket::Client::Handler
+
   void operator()(web::socket::Client::Connected const &) override;
   void operator()(web::socket::Client::Disconnected const &) override;
   void operator()(web::socket::Client::Ready const &) override;
@@ -72,7 +74,10 @@ class OrderBook final : public web::socket::Client::Handler, public json::Parser
 
   void parse(std::string_view const &message);
 
+  // json::Parser::Handler
+
   void operator()(Trace<json::Pong> const &) override;
+  void operator()(Trace<json::Subscribe> const &) override;
   //
   void operator()(Trace<json::TradeHistory> const &) override;
   //

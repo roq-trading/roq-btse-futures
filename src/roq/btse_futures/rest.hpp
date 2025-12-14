@@ -24,7 +24,7 @@
 #include "roq/btse_futures/rest_state.hpp"
 #include "roq/btse_futures/shared.hpp"
 
-#include "roq/btse_futures/json/market_summary.hpp"
+#include "roq/btse_futures/json/get_market_summary_ack.hpp"
 
 namespace roq {
 namespace btse_futures {
@@ -57,6 +57,8 @@ class Rest final : public web::rest::Client::Handler {
   void operator()(metrics::Writer &) const;
 
  protected:
+  // web::rest::Client::Handler
+
   void operator()(Trace<web::rest::Client::Connected> const &) override;
   void operator()(Trace<web::rest::Client::Disconnected> const &) override;
   void operator()(Trace<web::rest::Client::Latency> const &) override;
@@ -65,9 +67,11 @@ class Rest final : public web::rest::Client::Handler {
 
   uint32_t download(RestState);
 
+  // market-summary
+
   void get_market_summary();
   void get_market_summary_ack(Trace<web::rest::Response> const &, uint32_t sequence);
-  void operator()(Trace<json::MarketSummary> const &);
+  void operator()(Trace<json::GetMarketSummaryAck> const &);
 
   void process_response(web::rest::Response const &, auto error_handler, auto success_handler);
 

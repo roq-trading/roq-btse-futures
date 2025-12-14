@@ -50,6 +50,8 @@ class DropCopy final : public web::socket::Client::Handler, json::Parser::Handle
   void operator()(metrics::Writer &) const;
 
  protected:
+  // web::socket::Client::Handler
+
   void operator()(web::socket::Client::Connected const &) override;
   void operator()(web::socket::Client::Disconnected const &) override;
   void operator()(web::socket::Client::Ready const &) override;
@@ -58,7 +60,10 @@ class DropCopy final : public web::socket::Client::Handler, json::Parser::Handle
   void operator()(web::socket::Client::Text const &) override;
   void operator()(web::socket::Client::Binary const &) override;
 
+  // json::Parser::Handler
+
   void operator()(Trace<json::Pong> const &) override;
+  void operator()(Trace<json::Subscribe> const &) override;
   //
   void operator()(Trace<json::TradeHistory> const &) override;
   //

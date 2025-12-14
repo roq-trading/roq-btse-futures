@@ -3,13 +3,13 @@
   "type": "enum",
   "values": [
     {
-      "name": "account_info"
+      "name": "position_mode"
     },
     {
-      "name": "account_assets"
+      "name": "wallet"
     },
     {
-      "name": "position_info"
+      "name": "positions"
     },
     {
       "name": "open_orders"

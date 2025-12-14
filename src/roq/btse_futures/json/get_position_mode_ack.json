@@ -1,0 +1,11 @@
+{
+  "name": "roq/btse_futures/json/GetPositionModeAck",
+  "type": "array",
+  "values": [
+    {
+      "name": "data",
+      "type": "roq/btse_futures/json/GetPositionModeAckItem",
+      "array": "std/span"
+    }
+  ]
+}

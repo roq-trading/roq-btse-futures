@@ -2,14 +2,14 @@
 
 #include <catch2/catch_all.hpp>
 
-#include "roq/core/json/buffer_stack.hpp"
-
-#include "roq/btse_futures/json/snapshot_l1.hpp"
+#include "parser_tester.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
 
 using namespace std::literals;
+
+using value_type = json::SnapshotL1;
 
 TEST_CASE("simple", "[json_snapshot_l1]") {
   auto message = R"({)"
@@ -22,6 +22,10 @@ TEST_CASE("simple", "[json_snapshot_l1]") {
                  R"("timestamp":1759373840687)"
                  R"(})"
                  R"(})";
-  core::json::BufferStack buffer_stack{8192, 2};
-  json::SnapshotL1 obj{message, buffer_stack};
+  auto helper = [](value_type const &obj) {
+    CHECK(obj.topic == "snapshotL1:ETHPFC"sv);
+    REQUIRE(std::size(obj.data.bids) == 1);
+    REQUIRE(std::size(obj.data.asks) == 1);
+  };
+  ParserTester<value_type>::dispatch(helper, message, 8192, 2);
 }

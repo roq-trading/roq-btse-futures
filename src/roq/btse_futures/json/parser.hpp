@@ -10,6 +10,7 @@
 #include "roq/core/json/buffer_stack.hpp"
 
 #include "roq/btse_futures/json/pong.hpp"
+#include "roq/btse_futures/json/subscribe.hpp"
 
 #include "roq/btse_futures/json/trade_history.hpp"
 
@@ -30,6 +31,7 @@ namespace json {
 struct Parser final {
   struct Handler {
     virtual void operator()(Trace<json::Pong> const &) = 0;
+    virtual void operator()(Trace<json::Subscribe> const &) = 0;
     //
     virtual void operator()(Trace<json::TradeHistory> const &) = 0;
     //

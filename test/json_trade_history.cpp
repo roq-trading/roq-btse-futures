@@ -2,14 +2,16 @@
 
 #include <catch2/catch_all.hpp>
 
-#include "roq/core/json/buffer_stack.hpp"
-
-#include "roq/btse_futures/json/trade_history.hpp"
+#include "parser_tester.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
 
 using namespace std::literals;
+
+using namespace Catch::literals;
+
+using value_type = json::TradeHistory;
 
 // note! truncated
 TEST_CASE("snapshot", "[json_trade_history]") {
@@ -32,8 +34,12 @@ TEST_CASE("snapshot", "[json_trade_history]") {
                  R"(})"
                  R"(])"
                  R"(})";
-  core::json::BufferStack buffer{8192, 1};
-  [[maybe_unused]] json::TradeHistory obj{message, buffer};
+  auto helper = [](value_type const &obj) {
+    CHECK(obj.topic == "tradeHistoryApi"sv);
+    REQUIRE(std::size(obj.data) == 2);
+    CHECK(obj.data[0].price == 117657.3_a);
+  };
+  ParserTester<value_type>::dispatch(helper, message, 8192, 1);
 }
 
 // note! can't really tell the difference...
@@ -50,6 +56,10 @@ TEST_CASE("incremental", "[json_trade_history]") {
                  R"(})"
                  R"(])"
                  R"(})";
-  core::json::BufferStack buffer{8192, 1};
-  [[maybe_unused]] json::TradeHistory obj{message, buffer};
+  auto helper = [](value_type const &obj) {
+    CHECK(obj.topic == "tradeHistoryApi"sv);
+    REQUIRE(std::size(obj.data) == 1);
+    CHECK(obj.data[0].price == 117661.3_a);
+  };
+  ParserTester<value_type>::dispatch(helper, message, 8192, 1);
 }

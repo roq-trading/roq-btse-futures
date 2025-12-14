@@ -125,6 +125,8 @@ void MarketData::subscribe(size_t start_from) {
   }
 }
 
+// web::socket::Client::Handler
+
 void MarketData::operator()(web::socket::Client::Connected const &) {
 }
 
@@ -224,7 +226,12 @@ void MarketData::parse(std::string_view const &message) {
   });
 }
 
+// json::Parser::Handler
+
 void MarketData::operator()(Trace<json::Pong> const &) {
+}
+
+void MarketData::operator()(Trace<json::Subscribe> const &) {
 }
 
 // note! can't detect snapshot...

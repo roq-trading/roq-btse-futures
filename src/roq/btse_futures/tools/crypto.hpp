@@ -7,8 +7,6 @@
 #include <string>
 #include <string_view>
 
-#include "roq/web/http/method.hpp"
-
 #include "roq/utils/mac/hmac.hpp"
 
 namespace roq {
@@ -22,13 +20,12 @@ class Crypto final {
   Crypto(Crypto &&) = delete;
   Crypto(Crypto const &) = delete;
 
-  std::string create_ws_login(std::chrono::milliseconds now);
+  std::string create_ws_login(std::string_view const &path, std::chrono::milliseconds now_utc);
 
-  std::string create_headers(
-      web::http::Method, std::string_view const &path, std::string_view const &query, std::string_view const &body, std::chrono::milliseconds now);
+  std::string create_headers(std::string_view const &path, std::chrono::milliseconds now_utc, std::string_view const &body);
 
  private:
-  using MAC = utils::mac::HMAC<utils::hash::SHA256>;
+  using MAC = utils::mac::HMAC<utils::hash::SHA384>;
   using Digest = std::array<std::byte, MAC::DIGEST_LENGTH>;
 
   std::string const key_;

@@ -10,6 +10,18 @@
     },
     {
       "name": "update"
+    },
+    {
+      "name": "positionsV3"
+    },
+    {
+      "name": "allPositionV4"
+    },
+    {
+      "name": "notificationApiV4"
+    },
+    {
+      "name": "fillsV2"
     }
   ]
 }

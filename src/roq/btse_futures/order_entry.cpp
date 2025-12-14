@@ -14,6 +14,7 @@
 #include "roq/server/oms/exceptions.hpp"
 
 #include "roq/btse_futures/json/encoder.hpp"
+#include "roq/btse_futures/json/error.hpp"
 #include "roq/btse_futures/json/map.hpp"
 #include "roq/btse_futures/json/utils.hpp"
 
@@ -90,12 +91,12 @@ OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_i
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
       profile_{
-          .account_info = create_metrics(shared.settings, name_, "account_info"sv),
-          .account_info_ack = create_metrics(shared.settings, name_, "account_info_ack"sv),
-          .account_assets = create_metrics(shared.settings, name_, "account_assets"sv),
-          .account_assets_ack = create_metrics(shared.settings, name_, "account_assets_ack"sv),
-          .position_info = create_metrics(shared.settings, name_, "position_info"sv),
-          .position_info_ack = create_metrics(shared.settings, name_, "position_info_ack"sv),
+          .position_mode = create_metrics(shared.settings, name_, "position_mode"sv),
+          .position_mode_ack = create_metrics(shared.settings, name_, "position_mode_ack"sv),
+          .wallet = create_metrics(shared.settings, name_, "wallet"sv),
+          .wallet_ack = create_metrics(shared.settings, name_, "wallet_ack"sv),
+          .positions = create_metrics(shared.settings, name_, "positions"sv),
+          .positions_ack = create_metrics(shared.settings, name_, "positions_ack"sv),
           .open_orders = create_metrics(shared.settings, name_, "open_orders"sv),
           .open_orders_ack = create_metrics(shared.settings, name_, "open_orders_ack"sv),
           .fill_history = create_metrics(shared.settings, name_, "fill_history"sv),
@@ -133,7 +134,7 @@ void OrderEntry::operator()(Event<Timer> const &event) {
   }
   if (shared_.settings.rest.cancel_on_disconnect && next_heartbeat_ < now) {
     next_heartbeat_ = now + (shared_.settings.rest.ping_freq / 3);
-    countdown_cancel_all();
+    cancel_all_after();
   }
 }
 
@@ -142,12 +143,12 @@ void OrderEntry::operator()(metrics::Writer &writer) const {
       // counter
       .write(counter_.disconnect, metrics::Type::COUNTER)
       // profile
-      .write(profile_.account_info, metrics::Type::PROFILE)
-      .write(profile_.account_info_ack, metrics::Type::PROFILE)
-      .write(profile_.account_assets, metrics::Type::PROFILE)
-      .write(profile_.account_assets_ack, metrics::Type::PROFILE)
-      .write(profile_.position_info, metrics::Type::PROFILE)
-      .write(profile_.position_info_ack, metrics::Type::PROFILE)
+      .write(profile_.position_mode, metrics::Type::PROFILE)
+      .write(profile_.position_mode_ack, metrics::Type::PROFILE)
+      .write(profile_.wallet, metrics::Type::PROFILE)
+      .write(profile_.wallet_ack, metrics::Type::PROFILE)
+      .write(profile_.positions, metrics::Type::PROFILE)
+      .write(profile_.positions_ack, metrics::Type::PROFILE)
       .write(profile_.open_orders, metrics::Type::PROFILE)
       .write(profile_.open_orders_ack, metrics::Type::PROFILE)
       .write(profile_.fill_history, metrics::Type::PROFILE)
@@ -167,13 +168,13 @@ void OrderEntry::operator()(metrics::Writer &writer) const {
 }
 
 uint16_t OrderEntry::operator()(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
-  place_order(event, order, request_id);
+  create_order(event, order, request_id);
   return stream_id_;
 }
 
 uint16_t OrderEntry::operator()(
     Event<ModifyOrder> const &event, server::oms::Order const &order, std::string_view const &request_id, std::string_view const &previous_request_id) {
-  modify_order(event, order, request_id, previous_request_id);
+  amend_order(event, order, request_id, previous_request_id);
   return stream_id_;
 }
 
@@ -187,6 +188,8 @@ uint16_t OrderEntry::operator()(Event<CancelAllOrders> const &event, std::string
   cancel_all_orders(event, request_id);
   return stream_id_;
 }
+
+// web::rest::Client::Handler
 
 void OrderEntry::operator()(Trace<web::rest::Client::Connected> const &) {
   if (download_.downloading()) {
@@ -245,22 +248,23 @@ uint32_t OrderEntry::download(OrderEntryState state) {
     case UNDEFINED:
       assert(false);
       break;
-    case ACCOUNT_INFO:
-      get_account_info();
+    case POSITION_MODE:
+      get_position_mode();
       return 1;
-    case ACCOUNT_ASSETS:  // skip
-      get_account_assets();
+    case WALLET:
+      get_wallet();
       return 1;
-    case POSITION_INFO:  // skip
-      get_position_info();
+    case POSITIONS:
+      get_positions();
       return 1;
     case OPEN_ORDERS:
       get_open_orders();
       return 1;
     case FILL_HISTORY:
       if (shared_.settings.rest.download_fills_begin.count()) {
-        get_fill_history();
-        return 1;
+        // get_fill_history();
+        // return 1;
+        return 0;
       } else {
         return 0;
       }
@@ -272,18 +276,16 @@ uint32_t OrderEntry::download(OrderEntryState state) {
   return 0;
 }
 
-// account_info
+// position-mode
 
-void OrderEntry::get_account_info() {
-  profile_.account_info([&]() {
-    auto method = web::http::Method::GET;
-    auto path = shared_.api.order_management.account_info;
-    auto query = fmt::format("?category={}"sv, shared_.api.category);
-    auto headers = account_.create_headers(method, path, query, {});
+void OrderEntry::get_position_mode() {
+  profile_.position_mode([&]() {
+    auto path = shared_.api.order_management.position_mode;
+    auto headers = account_.create_headers(path);
     auto request = web::rest::Request{
-        .method = method,
+        .method = web::http::Method::GET,
         .path = path,
-        .query = query,
+        .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
         .headers = headers,
@@ -291,17 +293,17 @@ void OrderEntry::get_account_info() {
         .quality_of_service = {},
     };
     auto sequence = download_.sequence();
-    (*connection_)("account_info"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+    (*connection_)("position-mode"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
       TraceInfo trace_info;
       Trace event{trace_info, response};
-      get_account_info_ack(event, sequence);
+      get_position_mode_ack(event, sequence);
     });
   });
 }
 
-void OrderEntry::get_account_info_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto const state = OrderEntryState::ACCOUNT_INFO;
-  profile_.account_info_ack([&]() {
+void OrderEntry::get_position_mode_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
+  auto const state = OrderEntryState::POSITION_MODE;
+  profile_.position_mode_ack([&]() {
     auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
@@ -311,50 +313,31 @@ void OrderEntry::get_account_info_ack(Trace<web::rest::Response> const &event, u
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::AccountInfo account_info{body, decode_buffer_};
-        if (account_info.code == 0) {
-          Trace event{trace_info, account_info};
-          (*this)(event);
-          download_.check(state);
-        } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(account_info.code), account_info.msg);
-        }
+        json::GetPositionModeAck position_mode_ack{body, decode_buffer_};
+        Trace event{trace_info, position_mode_ack};
+        (*this)(event);
+        download_.check(state);
       }
     };
     process_response(event, handle_error, handle_success);
   });
 }
 
-void OrderEntry::operator()(Trace<json::AccountInfo> const &event) {
-  auto &[trace_info, account_info] = event;
-  log::info<4>("account_info={}"sv, account_info);
-  log::warn(
-      R"(DEBUG account="{}", account_mode={}, asset_mode={}, hold_mode={}, stp_mode={})"sv,
-      account_.name,
-      account_info.data.account_mode,
-      account_info.data.asset_mode,
-      account_info.data.hold_mode,
-      account_info.data.stp_mode);
-  for (auto &item : account_info.data.symbol_config_list) {
-    log::warn(R"(DEBUG account="{}", symbol="{}", leverage={}, margin_mode={})"sv, account_.name, item.symbol, item.leverage, item.margin_mode);
-  }
-  for (auto &item : account_info.data.coin_config_list) {
-    log::warn(R"(DEBUG account="{}", coin="{}", leverage={})"sv, account_.name, item.coin, item.leverage);
-  }
+void OrderEntry::operator()(Trace<json::GetPositionModeAck> const &event) {
+  auto &[trace_info, position_mode_ack] = event;
+  log::info<4>("position_mode_ack={}"sv, position_mode_ack);
 }
 
-// account_assets
+// wallet
 
-void OrderEntry::get_account_assets() {
-  profile_.account_assets([&]() {
-    auto method = web::http::Method::GET;
-    auto path = shared_.api.order_management.account_assets;
-    auto query = fmt::format("?category={}"sv, shared_.api.category);
-    auto headers = account_.create_headers(method, path, query, {});
+void OrderEntry::get_wallet() {
+  profile_.wallet([&]() {
+    auto path = shared_.api.order_management.wallet;
+    auto headers = account_.create_headers(path);
     auto request = web::rest::Request{
-        .method = method,
+        .method = web::http::Method::GET,
         .path = path,
-        .query = query,
+        .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
         .headers = headers,
@@ -362,167 +345,105 @@ void OrderEntry::get_account_assets() {
         .quality_of_service = {},
     };
     auto sequence = download_.sequence();
-    (*connection_)("account_assets"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_assets;
-      Trace event{trace_assets, response};
-      get_account_assets_ack(event, sequence);
+    (*connection_)("wallet"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+      TraceInfo trace_info;
+      Trace event{trace_info, response};
+      get_wallet_ack(event, sequence);
     });
   });
 }
 
-void OrderEntry::get_account_assets_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto const state = OrderEntryState::ACCOUNT_ASSETS;
-  profile_.account_assets_ack([&]() {
+void OrderEntry::get_wallet_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
+  auto const state = OrderEntryState::WALLET;
+  profile_.wallet_ack([&]() {
+    auto &[trace_info, response] = event;
+    auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
+      log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
+      download_.retry(state);
+    };
+    auto handle_success = [&](auto &body) {
+      if (download_.skip(sequence, state)) {
+        log::info("Download state={} has already been processed"sv, state);
+      } else {
+        json::GetWalletAck wallet_ack{body, decode_buffer_};
+        Trace event{trace_info, wallet_ack};
+        (*this)(event);
+        download_.check(state);
+      }
+    };
+    process_response(event, handle_error, handle_success);
+  });
+}
+
+void OrderEntry::operator()(Trace<json::GetWalletAck> const &event) {
+  auto &[trace_info, wallet_ack] = event;
+  log::info<4>("wallet_ack={}"sv, wallet_ack);
+}
+
+// positions
+
+void OrderEntry::get_positions() {
+  profile_.positions([&]() {
+    auto method = web::http::Method::GET;
+    auto path = shared_.api.order_management.positions;
+    auto headers = account_.create_headers(path);
+    auto request = web::rest::Request{
+        .method = web::http::Method::GET,
+        .path = path,
+        .query = {},
+        .accept = web::http::Accept::APPLICATION_JSON,
+        .content_type = {},
+        .headers = headers,
+        .body = {},
+        .quality_of_service = {},
+    };
+    auto sequence = download_.sequence();
+    (*connection_)("positions"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
+      TraceInfo trace_assets;
+      Trace event{trace_assets, response};
+      get_positions_ack(event, sequence);
+    });
+  });
+}
+
+void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
+  auto const state = OrderEntryState::POSITIONS;
+  profile_.positions_ack([&]() {
     auto &[trace_assets, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       download_.retry(state);
     };
     auto handle_success = [&](auto &body) {
+      log::warn("DEBUG {}"sv, body);
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::AccountAssets account_assets{body, decode_buffer_};
-        if (account_assets.code == 0) {
-          Trace event{trace_assets, account_assets};
-          (*this)(event);
-          download_.check(state);
-        } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(account_assets.code), account_assets.msg);
-        }
+        json::GetPositionsAck positions_ack{body, decode_buffer_};
+        Trace event{trace_assets, positions_ack};
+        (*this)(event);
+        download_.check(state);
       }
     };
     process_response(event, handle_error, handle_success);
   });
 }
 
-// note! download because it seems we don't always get snapshot from drop-copy
-void OrderEntry::operator()(Trace<json::AccountAssets> const &event) {
-  auto &[trace_assets, account_assets] = event;
-  log::info<4>("account_assets={}"sv, account_assets);
-  for (auto &item : account_assets.data.assets) {
-    log::warn("DEBUG item={}"sv, item);
-    auto funds_update = FundsUpdate{
-        .stream_id = stream_id_,
-        .account = account_.name,
-        .currency = item.coin,
-        .margin_mode = {},
-        .balance = item.balance,  // ???
-        .hold = item.locked,
-        .borrowed = item.debt,
-        .external_account = {},
-        .update_type = UpdateType::SNAPSHOT,
-        .exchange_time_utc = {},
-        .exchange_sequence = {},
-        .sending_time_utc = account_assets.request_time,
-    };
-    log::warn("DEBUG funds_update={}"sv, funds_update);
-    create_trace_and_dispatch(handler_, trace_assets, funds_update, true);
-  }
+void OrderEntry::operator()(Trace<json::GetPositionsAck> const &event) {
+  auto &[trace_assets, positions_ack] = event;
+  log::info<4>("positions_ack={}"sv, positions_ack);
 }
 
-// position_info
-
-void OrderEntry::get_position_info() {
-  profile_.position_info([&]() {
-    auto method = web::http::Method::GET;
-    auto path = shared_.api.order_management.position_info;
-    auto query = fmt::format("?category={}"sv, shared_.api.category);
-    auto headers = account_.create_headers(method, path, query, {});
-    auto request = web::rest::Request{
-        .method = method,
-        .path = path,
-        .query = query,
-        .accept = web::http::Accept::APPLICATION_JSON,
-        .content_type = {},
-        .headers = headers,
-        .body = {},
-        .quality_of_service = {},
-    };
-    auto sequence = download_.sequence();
-    (*connection_)("position_info"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      get_position_info_ack(event, sequence);
-    });
-  });
-}
-
-void OrderEntry::get_position_info_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto const state = OrderEntryState::POSITION_INFO;
-  profile_.position_info_ack([&]() {
-    auto &[trace_info, response] = event;
-    auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
-      log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
-      download_.retry(state);
-    };
-    auto handle_success = [&](auto &body) {
-      if (download_.skip(sequence, state)) {
-        log::info("Download state={} has already been processed"sv, state);
-      } else {
-        json::PositionInfo position_info{body, decode_buffer_};
-        if (position_info.code == 0) {
-          Trace event{trace_info, position_info};
-          (*this)(event);
-          download_.check(state);
-        } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(position_info.code), position_info.msg);
-        }
-      }
-    };
-    process_response(event, handle_error, handle_success);
-  });
-}
-
-// note! download because it seems we don't always get snapshot from drop-copy
-void OrderEntry::operator()(Trace<json::PositionInfo> const &event) {
-  auto &[trace_info, position_info] = event;
-  log::info<4>("position_info={}"sv, position_info);
-  for (auto &item : position_info.data.list) {
-    log::warn("DEBUG item={}"sv, item);
-    auto long_quantity = [&]() -> double {
-      if (item.pos_side == json::PosSide::LONG) {
-        return item.total;
-      }
-      return 0.0;
-    }();
-    auto short_quantity = [&]() -> double {
-      if (item.pos_side == json::PosSide::SHORT) {
-        return item.total;
-      }
-      return 0.0;
-    }();
-    auto position_update = PositionUpdate{
-        .stream_id = stream_id_,
-        .account = account_.name,
-        .exchange = shared_.settings.exchange,
-        .symbol = item.symbol,
-        .margin_mode = map(item.margin_mode),
-        .external_account = {},
-        .long_quantity = long_quantity,
-        .short_quantity = short_quantity,
-        .update_type = UpdateType::SNAPSHOT,
-        .exchange_time_utc = item.created_time,  // ???
-        .exchange_sequence = {},
-        .sending_time_utc = position_info.request_time,
-    };
-    log::warn("DEBUG position_update={}"sv, position_update);
-    create_trace_and_dispatch(handler_, trace_info, position_update, true);
-  }
-}
-
-// open_orders
+// open-orders
 
 void OrderEntry::get_open_orders() {
   profile_.open_orders([&]() {
-    auto method = web::http::Method::GET;
     auto path = shared_.api.order_management.open_orders;
-    auto query = fmt::format("?category={}"sv, shared_.api.category);
-    auto headers = account_.create_headers(method, path, query, {});
+    auto headers = account_.create_headers(path);
     auto request = web::rest::Request{
-        .method = method,
+        .method = web::http::Method::GET,
         .path = path,
-        .query = query,
+        .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = {},
         .headers = headers,
@@ -547,69 +468,25 @@ void OrderEntry::get_open_orders_ack(Trace<web::rest::Response> const &event, ui
       download_.retry(state);
     };
     auto handle_success = [&](auto &body) {
+      log::warn("DEBUG {}"sv, body);
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::OpenOrders open_orders{body, decode_buffer_};
-        if (open_orders.code == 0) {
-          Trace event{trace_info, open_orders};
-          (*this)(event);
-          download_.check(state);
-        } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(open_orders.code), open_orders.msg);
-        }
+        json::GetOpenOrdersAck open_orders_ack{body, decode_buffer_};
+        Trace event{trace_info, open_orders_ack};
+        (*this)(event);
+        download_.check(state);
       }
     };
     process_response(event, handle_error, handle_success);
   });
 }
 
-void OrderEntry::operator()(Trace<json::OpenOrders> const &event) {
-  auto &[trace_info, open_orders] = event;
-  log::info<4>("open_orders={}"sv, open_orders);
-  for (auto &item : open_orders.data.list) {
-    log::warn("DEBUG item={}"sv, item);
-    auto remaining_quantity = item.qty - item.cum_exec_qty;
-    auto order_update = server::oms::OrderUpdate{
-        .account = account_.name,
-        .exchange = shared_.settings.exchange,
-        .symbol = item.symbol,
-        .side = map(item.side),
-        .position_effect = map(item.pos_side, item.side),
-        .margin_mode = {},  // XXX FIXME TODO from asset_info[symbol]
-        .max_show_quantity = NaN,
-        .order_type = map(item.order_type),
-        .time_in_force = map(item.time_in_force),
-        .execution_instructions = {},  // XXX map from time_in_force + reduce_only
-        .create_time_utc = item.created_time,
-        .update_time_utc = item.updated_time,
-        .external_account = {},
-        .external_order_id = item.order_id,
-        .client_order_id = item.client_oid,
-        .order_status = map(item.order_status),
-        .quantity = item.qty,
-        .price = item.price,
-        .stop_price = NaN,
-        .leverage = NaN,
-        .remaining_quantity = remaining_quantity,
-        .traded_quantity = item.cum_exec_qty,
-        .average_traded_price = item.avg_price,
-        .last_traded_quantity = NaN,
-        .last_traded_price = NaN,
-        .last_liquidity = {},
-        .routing_id = {},
-        .max_request_version = {},
-        .max_response_version = {},
-        .max_accepted_version = {},
-        .update_type = UpdateType::SNAPSHOT,
-        .sending_time_utc = open_orders.request_time,
-    };
-    log::warn("DEBUG order_update={}"sv, order_update);
-    Trace event_2{trace_info, order_update};
-    (*this)(event_2, item.client_oid);
-  }
+void OrderEntry::operator()(Trace<json::GetOpenOrdersAck> const &event) {
+  auto &[trace_info, open_orders_ack] = event;
+  log::info<4>("open_orders_ack={}"sv, open_orders_ack);
 }
-
+/*
 // fill_history
 void OrderEntry::get_fill_history() {
   assert(shared_.settings.rest.download_fills_begin.count() > 0);
@@ -755,25 +632,23 @@ void OrderEntry::operator()(Trace<json::FillHistory> const &event) {
   }
   dispatch();
 }
+*/
+// create-order
 
-// place_order
-
-void OrderEntry::place_order(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
+void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
   profile_.place_order([&]() {
     if (!ready()) {
       throw server::oms::NotReady{"not ready"sv};
     }
     auto &[message_info, create_order] = event;
-    auto method = web::http::Method::POST;
-    auto path = shared_.api.order_management.place_order;
-    auto query = fmt::format("?category={}"sv, shared_.api.category);
+    auto path = shared_.api.order_management.create_order;
     auto body = json::Encoder::place_order(encode_buffer_, create_order, order, request_id, shared_.api.category);
     log::warn(R"(DEBUG body="{}")"sv, body);
-    auto headers = account_.create_headers(method, path, query, body);
+    auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
-        .method = method,
+        .method = web::http::Method::POST,
         .path = path,
-        .query = query,
+        .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = web::http::ContentType::APPLICATION_JSON,
         .headers = headers,
@@ -784,13 +659,13 @@ void OrderEntry::place_order(Event<CreateOrder> const &event, server::oms::Order
       uint32_t version = 1;
       TraceInfo trace_info;
       Trace event{trace_info, response};
-      place_order_ack(event, user_id, order_id, version);
+      create_order_ack(event, user_id, order_id, version);
     };
     (*connection_)(request_id, request, callback);
   });
 }
 
-void OrderEntry::place_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
+void OrderEntry::create_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
   profile_.place_order_ack([&]() {
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(DEBUG origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
@@ -828,9 +703,9 @@ void OrderEntry::operator()(
   log::warn("DEBUG place_order_ack={}"sv, place_order_ack);
 }
 
-// modify_order
+// amend-order
 
-void OrderEntry::modify_order(
+void OrderEntry::amend_order(
     Event<ModifyOrder> const &event,
     server::oms::Order const &order,
     std::string_view const &request_id,
@@ -840,16 +715,14 @@ void OrderEntry::modify_order(
       throw server::oms::NotReady{"not ready"sv};
     }
     auto &[message_info, modify_order] = event;
-    auto method = web::http::Method::POST;
-    auto path = shared_.api.order_management.modify_order;
-    auto query = fmt::format("?category={}"sv, shared_.api.category);
+    auto path = shared_.api.order_management.amend_order;
     auto body = json::Encoder::modify_order(encode_buffer_, modify_order, order, request_id);
     log::warn(R"(DEBUG body="{}")"sv, body);
-    auto headers = account_.create_headers(method, path, query, body);
+    auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
-        .method = method,
+        .method = web::http::Method::POST,
         .path = path,
-        .query = query,
+        .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = web::http::ContentType::APPLICATION_JSON,
         .headers = headers,
@@ -860,13 +733,13 @@ void OrderEntry::modify_order(
                         [[maybe_unused]] auto &request_id, auto &response) {
       TraceInfo trace_info;
       Trace event{trace_info, response};
-      modify_order_ack(event, user_id, order_id, version);
+      amend_order_ack(event, user_id, order_id, version);
     };
     (*connection_)(request_id, request, callback);
   });
 }
 
-void OrderEntry::modify_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
+void OrderEntry::amend_order_ack(Trace<web::rest::Response> const &event, uint8_t user_id, uint64_t order_id, uint32_t version) {
   profile_.modify_order_ack([&]() {
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(DEBUG origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
@@ -904,7 +777,7 @@ void OrderEntry::operator()(
   log::warn("DEBUG modify_order_ack={}"sv, modify_order_ack);
 }
 
-// cancel_order
+// cancel-order
 
 void OrderEntry::cancel_order(
     Event<CancelOrder> const &event,
@@ -916,16 +789,14 @@ void OrderEntry::cancel_order(
       throw server::oms::NotReady{"not ready"sv};
     }
     auto &[message_info, cancel_order] = event;
-    auto method = web::http::Method::POST;
     auto path = shared_.api.order_management.cancel_order;
-    auto query = fmt::format("?category={}"sv, shared_.api.category);
     auto body = json::Encoder::cancel_order(encode_buffer_, cancel_order, order, request_id);
     log::warn(R"(DEBUG body="{}")"sv, body);
-    auto headers = account_.create_headers(method, path, query, body);
+    auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
-        .method = method,
+        .method = web::http::Method::POST,
         .path = path,
-        .query = query,
+        .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = web::http::ContentType::APPLICATION_JSON,
         .headers = headers,
@@ -980,7 +851,7 @@ void OrderEntry::operator()(
   log::warn("DEBUG cancel_order_ack={}"sv, cancel_order_ack);
 }
 
-// cancel_all_orders
+// cancel-all-orders
 
 void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::string_view const &request_id) {
   profile_.cancel_all_orders([&]() {
@@ -988,6 +859,7 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
       throw server::oms::NotReady{"not ready"sv};
     }
     auto &[message_info, cancel_all_orders] = event;
+    /*
     auto method = web::http::Method::POST;
     auto path = shared_.api.order_management.cancel_all_orders;
     auto query = fmt::format("?category={}"sv, shared_.api.category);
@@ -1009,6 +881,7 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
       cancel_all_orders_ack(event, user_id);
     };
     (*connection_)(request_id, request, callback);
+    */
   });
 }
 
@@ -1057,16 +930,15 @@ void OrderEntry::operator()(Trace<json::CancelAllOrdersAck> const &event, [[mayb
   log::warn("DEBUG cancel_all_orders_ack={}"sv, cancel_all_orders_ack);
 }
 
-// countdown_cancel_all
+// cancel-all-after
 
-void OrderEntry::countdown_cancel_all() {
+void OrderEntry::cancel_all_after() {
   profile_.countdown_cancel_all([&]() {
-    auto method = web::http::Method::POST;
-    auto path = shared_.api.order_management.countdown_cancel_all;
+    auto path = shared_.api.order_management.cancel_all_after;
     auto body = json::Encoder::countdown_cancel_all(encode_buffer_, std::chrono::duration_cast<std::chrono::seconds>(shared_.settings.rest.ping_freq));
-    auto headers = account_.create_headers(method, path, {}, body);
+    auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
-        .method = method,
+        .method = web::http::Method::POST,
         .path = path,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
@@ -1078,13 +950,13 @@ void OrderEntry::countdown_cancel_all() {
     auto callback = [this]([[maybe_unused]] auto &request_id, auto &response) {
       TraceInfo trace_info;
       Trace event{trace_info, response};
-      countdown_cancel_all_ack(event);
+      cancel_all_after_ack(event);
     };
     (*connection_)("countdown_cancel_all"sv, request, callback);
   });
 }
 
-void OrderEntry::countdown_cancel_all_ack(Trace<web::rest::Response> const &event) {
+void OrderEntry::cancel_all_after_ack(Trace<web::rest::Response> const &event) {
   profile_.countdown_cancel_all_ack([&]() {
     auto &[trace_info, response] = event;
     auto [status, category, body] = response.result();
@@ -1123,10 +995,14 @@ void OrderEntry::process_response(web::rest::Response const &response, auto erro
           case CONFLICT:  // 409
             assert(false);
             [[fallthrough]];
-          default: {
-            // json::Message error{body};
-            // XXX HANS error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(error.code), error.msg);
-          }
+          default:
+            if (std::empty(body)) {
+              auto message = fmt::format("{}"sv, status);
+              error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, Error::UNKNOWN, message);
+            } else {
+              json::Error error{body};
+              error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(error.error_code), error.message);
+            }
         }
         break;
       case SERVER_ERROR: {
