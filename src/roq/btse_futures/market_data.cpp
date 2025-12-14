@@ -292,19 +292,19 @@ void MarketData::operator()(Trace<json::Login> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void MarketData::operator()(Trace<json::Account> const &) {
+void MarketData::operator()(Trace<json::Positions> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void MarketData::operator()(Trace<json::Position> const &) {
+void MarketData::operator()(Trace<json::AllPosition> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void MarketData::operator()(Trace<json::Order> const &) {
+void MarketData::operator()(Trace<json::Notification> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void MarketData::operator()(Trace<json::Fill> const &) {
+void MarketData::operator()(Trace<json::Fills> const &) {
   log::fatal("Unexpected"sv);
 }
 

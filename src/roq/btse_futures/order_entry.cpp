@@ -384,7 +384,6 @@ void OrderEntry::operator()(Trace<json::GetWalletAck> const &event) {
 
 void OrderEntry::get_positions() {
   profile_.positions([&]() {
-    auto method = web::http::Method::GET;
     auto path = shared_.api.order_management.positions;
     auto headers = account_.create_headers(path);
     auto request = web::rest::Request{
@@ -642,7 +641,7 @@ void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Orde
     }
     auto &[message_info, create_order] = event;
     auto path = shared_.api.order_management.create_order;
-    auto body = json::Encoder::place_order(encode_buffer_, create_order, order, request_id, shared_.api.category);
+    auto body = json::Encoder::place_order(encode_buffer_, create_order, order, request_id);
     log::warn(R"(DEBUG body="{}")"sv, body);
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
@@ -684,13 +683,10 @@ void OrderEntry::create_order_ack(Trace<web::rest::Response> const &event, uint8
       (*this)(event_2, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
+      log::warn("DEBUG {}"sv, body);
       json::PlaceOrderAck place_order_ack{body, decode_buffer_};
-      if (place_order_ack.code == 0) {
-        Trace event_2{event, place_order_ack};
-        (*this)(event_2, user_id, order_id, version);
-      } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(place_order_ack.code), place_order_ack.msg);
-      }
+      Trace event_2{event, place_order_ack};
+      (*this)(event_2, user_id, order_id, version);
     };
     process_response(event, handle_error, handle_success);
   });
@@ -720,7 +716,7 @@ void OrderEntry::amend_order(
     log::warn(R"(DEBUG body="{}")"sv, body);
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
-        .method = web::http::Method::POST,
+        .method = web::http::Method::PUT,
         .path = path,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
@@ -758,6 +754,7 @@ void OrderEntry::amend_order_ack(Trace<web::rest::Response> const &event, uint8_
       (*this)(event_2, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
+      log::warn("DEBUG {}"sv, body);
       json::ModifyOrderAck modify_order_ack{body, decode_buffer_};
       if (modify_order_ack.code == 0) {
         Trace event_2{event, modify_order_ack};
@@ -794,7 +791,7 @@ void OrderEntry::cancel_order(
     log::warn(R"(DEBUG body="{}")"sv, body);
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
-        .method = web::http::Method::POST,
+        .method = web::http::Method::DELETE,
         .path = path,
         .query = {},
         .accept = web::http::Accept::APPLICATION_JSON,
@@ -832,6 +829,7 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
       (*this)(event_2, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
+      log::warn("DEBUG {}"sv, body);
       json::CancelOrderAck cancel_order_ack{body, decode_buffer_};
       if (cancel_order_ack.code == 0) {
         Trace event_2{event, cancel_order_ack};
@@ -983,6 +981,7 @@ void OrderEntry::process_response(web::rest::Response const &response, auto erro
       case REDIRECTION:
         log::fatal("Unexpected: URL is being redirected"sv);
       case CLIENT_ERROR:
+        log::warn("{}"sv, body);
         switch (status) {
           using enum web::http::Status;
           case FORBIDDEN:            // 403

@@ -15,8 +15,6 @@ namespace btse_futures {
 
 API API::create(Settings const &) {
   return {
-      .category = {},
-      .inst_type = {},
       .market_data{
           .market_summary = "/api/v2.3/market_summary"sv,
       },

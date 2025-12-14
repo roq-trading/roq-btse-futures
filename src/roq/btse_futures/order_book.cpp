@@ -339,19 +339,19 @@ void OrderBook::operator()(Trace<json::Login> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void OrderBook::operator()(Trace<json::Account> const &) {
+void OrderBook::operator()(Trace<json::Positions> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void OrderBook::operator()(Trace<json::Position> const &) {
+void OrderBook::operator()(Trace<json::AllPosition> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void OrderBook::operator()(Trace<json::Order> const &) {
+void OrderBook::operator()(Trace<json::Notification> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void OrderBook::operator()(Trace<json::Fill> const &) {
+void OrderBook::operator()(Trace<json::Fills> const &) {
   log::fatal("Unexpected"sv);
 }
 

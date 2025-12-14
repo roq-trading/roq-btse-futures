@@ -3,16 +3,34 @@
   "type": "enum",
   "values": [
     {
-      "name": "ioc"
+      "name": "GTC"
     },
     {
-      "name": "fok"
+      "name": "IOC"
     },
     {
-      "name": "gtc"
+      "name": "FOK"
     },
     {
-      "name": "post_only"
+      "name": "HALFMIN"
+    },
+    {
+      "name": "FIVEMIN"
+    },
+    {
+      "name": "HOUR"
+    },
+    {
+      "name": "TWELVEHOUR"
+    },
+    {
+      "name": "DAY"
+    },
+    {
+      "name": "WEEK"
+    },
+    {
+      "name": "MONTH"
     }
   ]
 }

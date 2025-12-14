@@ -12,7 +12,9 @@ using namespace std::literals;
 using value_type = json::Pong;
 
 TEST_CASE("snapshot", "[json_pong]") {
+  /*
   auto message = "pong"sv;
-  auto helper = []([[maybe_unused]] value_type const &obj) {};
-  // ParserTester<value_type>::dispatch(helper, message, 8192, 1);
+  auto helper = [](value_type const &) {};
+  ParserTester<value_type>::dispatch(helper, message, 8192, 1);
+  */
 }

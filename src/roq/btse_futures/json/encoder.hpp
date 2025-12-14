@@ -18,8 +18,7 @@ namespace btse_futures {
 namespace json {
 
 struct Encoder final {
-  static std::string_view place_order(
-      std::string &buffer, CreateOrder const &, server::oms::Order const &, std::string_view const &request_id, std::string_view const &category);
+  static std::string_view place_order(std::string &buffer, CreateOrder const &, server::oms::Order const &, std::string_view const &request_id);
 
   static std::string_view modify_order(std::string &buffer, ModifyOrder const &, server::oms::Order const &, std::string_view const &request_id);
 

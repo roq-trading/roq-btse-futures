@@ -1,0 +1,10 @@
+{
+  "name": "roq/btse_futures/json/AllPositionDataItem",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "symbol",
+      "type": "std/string_view"
+    }
+  ]
+}

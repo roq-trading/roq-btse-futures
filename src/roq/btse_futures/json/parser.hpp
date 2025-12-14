@@ -19,10 +19,10 @@
 
 #include "roq/btse_futures/json/login.hpp"
 
-#include "roq/btse_futures/json/account.hpp"
-#include "roq/btse_futures/json/fill.hpp"
-#include "roq/btse_futures/json/order.hpp"
-#include "roq/btse_futures/json/position.hpp"
+#include "roq/btse_futures/json/all_position.hpp"
+#include "roq/btse_futures/json/fills.hpp"
+#include "roq/btse_futures/json/notification.hpp"
+#include "roq/btse_futures/json/positions.hpp"
 
 namespace roq {
 namespace btse_futures {
@@ -39,10 +39,10 @@ struct Parser final {
     virtual void operator()(Trace<json::Update> const &) = 0;
     //
     virtual void operator()(Trace<json::Login> const &) = 0;
-    virtual void operator()(Trace<json::Account> const &) = 0;
-    virtual void operator()(Trace<json::Position> const &) = 0;
-    virtual void operator()(Trace<json::Order> const &) = 0;
-    virtual void operator()(Trace<json::Fill> const &) = 0;
+    virtual void operator()(Trace<json::Positions> const &) = 0;
+    virtual void operator()(Trace<json::AllPosition> const &) = 0;
+    virtual void operator()(Trace<json::Notification> const &) = 0;
+    virtual void operator()(Trace<json::Fills> const &) = 0;
   };
 
   static bool dispatch(Handler &, std::string_view const &message, core::json::BufferStack &, TraceInfo const &, bool allow_unknown_event_types);

@@ -10,8 +10,6 @@ namespace roq {
 namespace btse_futures {
 
 struct API final {
-  std::string_view category;
-  std::string_view inst_type;
   struct {
     std::string_view market_summary;
   } market_data;

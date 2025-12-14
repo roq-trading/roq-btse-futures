@@ -38,10 +38,10 @@ struct ParserTester final : public json::Parser::Handler {
   void operator()(Trace<json::Update> const &event) override { dispatch_helper(event); }
   //
   void operator()(Trace<json::Login> const &event) override { dispatch_helper(event); }
-  void operator()(Trace<json::Account> const &event) override { dispatch_helper(event); }
-  void operator()(Trace<json::Position> const &event) override { dispatch_helper(event); }
-  void operator()(Trace<json::Order> const &event) override { dispatch_helper(event); }
-  void operator()(Trace<json::Fill> const &event) override { dispatch_helper(event); }
+  void operator()(Trace<json::Positions> const &event) override { dispatch_helper(event); }
+  void operator()(Trace<json::AllPosition> const &event) override { dispatch_helper(event); }
+  void operator()(Trace<json::Notification> const &event) override { dispatch_helper(event); }
+  void operator()(Trace<json::Fills> const &event) override { dispatch_helper(event); }
 
   template <typename U>
   void dispatch_helper(Trace<U> const &event) {

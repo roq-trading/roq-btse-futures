@@ -13,131 +13,131 @@ using Helper = detail::MapHelper<Args...>;
 
 // btse_futures::json => roq
 
-// btse_futures::json::Action => roq::MarginMode
+// int32_t => roq::OrderStatus
 
 template <>
 template <>
-constexpr Helper<btse_futures::json::Action>::operator std::optional<roq::UpdateType>() const {
+constexpr Helper<int32_t>::operator std::optional<roq::OrderStatus>() const {
   switch (std::get<0>(args_)) {
-    using enum btse_futures::json::Action::type_t;
-    case UNDEFINED_INTERNAL:
-      return roq::UpdateType::UNDEFINED;
-    case UNKNOWN_INTERNAL:
-      return roq::UpdateType::UNDEFINED;
-    case SNAPSHOT:
-      return roq::UpdateType::SNAPSHOT;
-    case UPDATE:
-      return roq::UpdateType::INCREMENTAL;
-  }
-  return {};
-}
-
-static_assert(Helper{btse_futures::json::Action{btse_futures::json::Action::UNDEFINED_INTERNAL}} == roq::UpdateType::UNDEFINED);
-static_assert(Helper{btse_futures::json::Action{btse_futures::json::Action::SNAPSHOT}} == roq::UpdateType::SNAPSHOT);
-static_assert(Helper{btse_futures::json::Action{btse_futures::json::Action::UPDATE}} == roq::UpdateType::INCREMENTAL);
-
-template <>
-template <>
-std::optional<roq::UpdateType> Map<btse_futures::json::Action>::helper() const {
-  return Helper{args_};
-}
-
-// btse_futures::json::AssetMode => roq::MarginMode
-
-template <>
-template <>
-constexpr Helper<btse_futures::json::AssetMode>::operator std::optional<roq::MarginMode>() const {
-  switch (std::get<0>(args_)) {
-    using enum btse_futures::json::AssetMode::type_t;
-    case UNDEFINED_INTERNAL:
-      return roq::MarginMode::UNDEFINED;
-    case UNKNOWN_INTERNAL:
-      return roq::MarginMode::UNDEFINED;
-    case SINGLE:
-      return roq::MarginMode::ISOLATED;
-    case UNION:
-      return roq::MarginMode::CROSS;
-    case MULTI_ASSETS:
-      return roq::MarginMode::CROSS;  // ???
-  }
-  return {};
-}
-
-static_assert(Helper{btse_futures::json::AssetMode{btse_futures::json::AssetMode::UNDEFINED_INTERNAL}} == roq::MarginMode::UNDEFINED);
-static_assert(Helper{btse_futures::json::AssetMode{btse_futures::json::AssetMode::SINGLE}} == roq::MarginMode::ISOLATED);
-static_assert(Helper{btse_futures::json::AssetMode{btse_futures::json::AssetMode::UNION}} == roq::MarginMode::CROSS);
-static_assert(Helper{btse_futures::json::AssetMode{btse_futures::json::AssetMode::MULTI_ASSETS}} == roq::MarginMode::CROSS);
-
-template <>
-template <>
-std::optional<roq::MarginMode> Map<btse_futures::json::AssetMode>::helper() const {
-  return Helper{args_};
-}
-
-// btse_futures::json::MarginMode => roq::MarginMode
-
-template <>
-template <>
-constexpr Helper<btse_futures::json::MarginMode>::operator std::optional<roq::MarginMode>() const {
-  switch (std::get<0>(args_)) {
-    using enum btse_futures::json::MarginMode::type_t;
-    case UNDEFINED_INTERNAL:
-      return roq::MarginMode::UNDEFINED;
-    case UNKNOWN_INTERNAL:
-      return roq::MarginMode::UNDEFINED;
-    case CROSSED:
-      return roq::MarginMode::CROSS;
-    case ISOLATED:
-      return roq::MarginMode::ISOLATED;
-  }
-  return {};
-}
-
-static_assert(Helper{btse_futures::json::MarginMode{btse_futures::json::MarginMode::UNDEFINED_INTERNAL}} == roq::MarginMode::UNDEFINED);
-static_assert(Helper{btse_futures::json::MarginMode{btse_futures::json::MarginMode::CROSSED}} == roq::MarginMode::CROSS);
-static_assert(Helper{btse_futures::json::MarginMode{btse_futures::json::MarginMode::ISOLATED}} == roq::MarginMode::ISOLATED);
-
-template <>
-template <>
-std::optional<roq::MarginMode> Map<btse_futures::json::MarginMode>::helper() const {
-  return Helper{args_};
-}
-
-// btse_futures::json::OrderStatus => roq::OrderStatus
-
-template <>
-template <>
-constexpr Helper<btse_futures::json::OrderStatus>::operator std::optional<roq::OrderStatus>() const {
-  switch (std::get<0>(args_)) {
-    using enum btse_futures::json::OrderStatus::type_t;
-    case UNDEFINED_INTERNAL:
+    case 1:  //  MARKET_UNAVAILABLE = Futures market is unavailable
       return roq::OrderStatus::UNDEFINED;
-    case UNKNOWN_INTERNAL:
-      return roq::OrderStatus::UNDEFINED;
-    case LIVE:
+    case 2:  //  ORDER_INSERTED = Order is inserted successfully
       return roq::OrderStatus::WORKING;
-    case NEW:
-      return roq::OrderStatus::WORKING;
-    case PARTIALLY_FILLED:
-      return roq::OrderStatus::WORKING;
-    case FILLED:
+    case 4:  //  ORDER_FULLY_TRANSACTED = Order is fully transacted
       return roq::OrderStatus::COMPLETED;
-    case CANCELLED:
+    case 5:  //  ORDER_PARTIALLY_TRANSACTED = Order is partially transacted
+      return roq::OrderStatus::WORKING;
+    case 6:  //  ORDER_CANCELLED = Order is cancelled successfully
       return roq::OrderStatus::CANCELED;
+    case 7:  //  ORDER_REFUNDED = Order is refunded
+      return roq::OrderStatus::UNDEFINED;
+    case 8:  //  INSUFFICIENT_BALANCE = Insufficient balance in account
+      return roq::OrderStatus::REJECTED;
+    case 9:  //  TRIGGER_INSERTED = Trigger Order is inserted successfully
+      return roq::OrderStatus::WORKING;
+    case 10:  //  TRIGGER_ACTIVATED = Trigger Order is activated successfully
+      return roq::OrderStatus::WORKING;
+    case 11:  //  ERROR_INVALID_CURRENCY
+      return roq::OrderStatus::REJECTED;
+    case 12:  //  ERROR_UPDATE_RISK_LIMIT = Error in updating risk limit
+      return roq::OrderStatus::REJECTED;
+    case 13:  //  ERROR_INVALID_LEVERAGE
+      return roq::OrderStatus::REJECTED;
+    case 15:  //  ORDER_REJECTED = Order is rejected
+      return roq::OrderStatus::REJECTED;
+    case 16:  //  ORDER_NOTFOUND = Order is not found with the order ID or clOrderID provided
+      return roq::OrderStatus::REJECTED;
+    case 17:  //  REQUEST_FAILED = Failed to complete the request, please check order status
+      return roq::OrderStatus::REJECTED;
+    case 20:                               //  SUCCESS = Action succeeded.
+      return roq::OrderStatus::UNDEFINED;  // ???
+    case 21:                               //  FREEZE_SUCCESSFUL
+      return roq::OrderStatus::UNDEFINED;  // ???
+    case 27:                               //  TRANSFER_SUCCESSFUL = Transfer funds between futures and spot is successful
+      return roq::OrderStatus::UNDEFINED;
+    case 28:  //  TRANSFER_UNSUCCESSFUL = Transfer funds between spot and futures is unsuccessful
+      return roq::OrderStatus::UNDEFINED;
+    case 29:  //  QUERY_GET_ORDERS
+      return roq::OrderStatus::UNDEFINED;
+    case 31:  //  QUERY_GET_POSITIONS
+      return roq::OrderStatus::UNDEFINED;
+    case 33:  //  QUERY_GET_ALL_POSITIONS_ORDERS
+      return roq::OrderStatus::UNDEFINED;
+    case 34:  //  QUERY_WALLET
+      return roq::OrderStatus::UNDEFINED;
+    case 36:  //  QUERY_FUTURES_MARGIN
+      return roq::OrderStatus::UNDEFINED;
+    case 41:  //  ERROR_INVALID_RISK_LIMIT = Invalid risk limit was specified
+      return roq::OrderStatus::REJECTED;
+    case 51:  //  QUERY_GET_ORDERS_WITH_LIMIT
+      return roq::OrderStatus::UNDEFINED;
+    case 64:  //  STATUS_LIQUIDATION = Account is undergoing liquidation
+      return roq::OrderStatus::REJECTED;
+    case 65:                               //  STATUS_ACTIVE = Order is active
+      return roq::OrderStatus::WORKING;    // ???
+    case 66:                               //  MODE_BUY
+      return roq::OrderStatus::UNDEFINED;  // ???
+    case 76:                               //  ORDER_TYPE_LIMIT = Limit order
+      return roq::OrderStatus::UNDEFINED;
+    case 77:  //  ORDER_TYPE_MARKET = Market order
+      return roq::OrderStatus::UNDEFINED;
+    case 80:  //  ORDER_TYPE_PEG = Peg/Algo order
+      return roq::OrderStatus::UNDEFINED;
+    case 81:  //  ORDER_TYPE_OTC = Otc order
+      return roq::OrderStatus::UNDEFINED;
+    case 83:  //  MODE_SELL
+      return roq::OrderStatus::UNDEFINED;
+    case 85:  //  STATUS_PROCESSING = Order is inactive
+      return roq::OrderStatus::UNDEFINED;
+    case 88:  //  STATUS_INACTIVE = Order is inactive
+      return roq::OrderStatus::UNDEFINED;
+    case 101:  //  FUTURES_ORDER_PRICE_OUTSIDE_LIQUIDATION_PRICE = Futures order is outside of liquidation price
+      return roq::OrderStatus::UNDEFINED;
+    case 110:  //  FUTURES_FUNDING
+      return roq::OrderStatus::UNDEFINED;
+    case 123:  //  AMEND_ORDER = Order amended
+      return roq::OrderStatus::UNDEFINED;
+    case 124:  //  UNFREEZE_SUCCESSFUL
+      return roq::OrderStatus::UNDEFINED;
+    case 129:  //  FUTURES_CONFIG_MODE_CHANGE
+      return roq::OrderStatus::UNDEFINED;
+    case 131:  //  FUTURES_STATUS_PROCESSING_LEVERAGE
+      return roq::OrderStatus::UNDEFINED;
+    case 132:  //  FUTURES_STATUS_PROCESSING_RISK_LIMIT
+      return roq::OrderStatus::UNDEFINED;
+    case 133:  //  FUTURES_POSITION_MODE_INVALID
+      return roq::OrderStatus::REJECTED;
+    case 134:  //  POSITION_MODE_UNCHANGEABLE
+      return roq::OrderStatus::UNDEFINED;
+    case 138:  //  POSITION_MODE_CHANGE_PROCESSING
+      return roq::OrderStatus::UNDEFINED;
+    case 300:  //  ERROR_MAX_ORDER_SIZE_EXCEEDED
+      return roq::OrderStatus::REJECTED;
+    case 301:  //  ERROR_INVALID_ORDER_SIZE
+      return roq::OrderStatus::REJECTED;
+    case 302:  //  ERROR_INVALID_ORDER_PRICE
+      return roq::OrderStatus::REJECTED;
+    case 303:  //  ERROR_RATE_LIMITS_EXCEEDED
+      return roq::OrderStatus::REJECTED;
+    case 304:  //  ERROR_MAX_OPEN_ORDER_EXCEEDED
+      return roq::OrderStatus::REJECTED;
+    case 305:  //  ERROR_ORDER_PRICE_OUT_OF_PRICE_PROTECTION_RANGE
+      return roq::OrderStatus::REJECTED;
+    case 1003:  //  ORDER_LIQUIDATION = Order is undergoing liquidation
+      return roq::OrderStatus::REJECTED;
+    case 1004:  //  ORDER_ADL = Order is undergoing ADL
+      return roq::OrderStatus::REJECTED;
+    case 30410:  //  BLOCK_TRADE_COMPLETE_SUCCESS
+      return roq::OrderStatus::UNDEFINED;
   }
   return {};
 }
 
-static_assert(Helper{btse_futures::json::OrderStatus{btse_futures::json::OrderStatus::UNDEFINED_INTERNAL}} == roq::OrderStatus::UNDEFINED);
-static_assert(Helper{btse_futures::json::OrderStatus{btse_futures::json::OrderStatus::LIVE}} == roq::OrderStatus::WORKING);
-static_assert(Helper{btse_futures::json::OrderStatus{btse_futures::json::OrderStatus::NEW}} == roq::OrderStatus::WORKING);
-static_assert(Helper{btse_futures::json::OrderStatus{btse_futures::json::OrderStatus::PARTIALLY_FILLED}} == roq::OrderStatus::WORKING);
-static_assert(Helper{btse_futures::json::OrderStatus{btse_futures::json::OrderStatus::FILLED}} == roq::OrderStatus::COMPLETED);
-static_assert(Helper{btse_futures::json::OrderStatus{btse_futures::json::OrderStatus::CANCELLED}} == roq::OrderStatus::CANCELED);
+// static_assert(Helper{btse_futures::json::OrderStatus{btse_futures::json::OrderStatus::UNDEFINED_INTERNAL}} == roq::OrderStatus::UNDEFINED);
 
 template <>
 template <>
-std::optional<roq::OrderStatus> Map<btse_futures::json::OrderStatus>::helper() const {
+std::optional<roq::OrderStatus> Map<int32_t>::helper() const {
   return Helper{args_};
 }
 
@@ -156,6 +156,8 @@ constexpr Helper<btse_futures::json::OrderType>::operator std::optional<roq::Ord
       return roq::OrderType::MARKET;
     case LIMIT:
       return roq::OrderType::LIMIT;
+    case OCO:
+      return roq::OrderType::UNDEFINED;
   }
   return {};
 }
@@ -163,82 +165,11 @@ constexpr Helper<btse_futures::json::OrderType>::operator std::optional<roq::Ord
 static_assert(Helper{btse_futures::json::OrderType{btse_futures::json::OrderType::UNDEFINED_INTERNAL}} == roq::OrderType::UNDEFINED);
 static_assert(Helper{btse_futures::json::OrderType{btse_futures::json::OrderType::MARKET}} == roq::OrderType::MARKET);
 static_assert(Helper{btse_futures::json::OrderType{btse_futures::json::OrderType::LIMIT}} == roq::OrderType::LIMIT);
+static_assert(Helper{btse_futures::json::OrderType{btse_futures::json::OrderType::OCO}} == roq::OrderType::UNDEFINED);
 
 template <>
 template <>
 std::optional<roq::OrderType> Map<btse_futures::json::OrderType>::helper() const {
-  return Helper{args_};
-}
-
-// {btse_futures::json::PosSide, btse_futures::json::Side} => roq::PositionEffect
-
-template <>
-template <>
-constexpr Helper<btse_futures::json::PosSide, btse_futures::json::Side>::operator std::optional<roq::PositionEffect>() const {
-  switch (std::get<0>(args_)) {
-    using enum btse_futures::json::PosSide::type_t;
-    case UNDEFINED_INTERNAL:
-      return roq::PositionEffect::UNDEFINED;
-    case UNKNOWN_INTERNAL:
-      return roq::PositionEffect::UNDEFINED;
-    case LONG:
-      switch (std::get<1>(args_)) {
-        using enum btse_futures::json::Side::type_t;
-        case UNDEFINED_INTERNAL:
-          return roq::PositionEffect::UNDEFINED;
-        case UNKNOWN_INTERNAL:
-          return roq::PositionEffect::UNDEFINED;
-        case BUY:
-          return roq::PositionEffect::OPEN;
-        case SELL:
-          return roq::PositionEffect::CLOSE;
-      }
-      break;
-    case SHORT:
-      switch (std::get<1>(args_)) {
-        using enum btse_futures::json::Side::type_t;
-        case UNDEFINED_INTERNAL:
-          return roq::PositionEffect::UNDEFINED;
-        case UNKNOWN_INTERNAL:
-          return roq::PositionEffect::UNDEFINED;
-        case BUY:
-          return roq::PositionEffect::CLOSE;
-        case SELL:
-          return roq::PositionEffect::OPEN;
-      }
-      break;
-    case NET:
-      return roq::PositionEffect::UNDEFINED;
-  }
-  return {};
-}
-
-static_assert(
-    Helper{
-        btse_futures::json::PosSide{btse_futures::json::PosSide::UNDEFINED_INTERNAL}, btse_futures::json::Side{btse_futures::json::Side::UNDEFINED_INTERNAL}} ==
-    roq::PositionEffect::UNDEFINED);
-static_assert(
-    Helper{btse_futures::json::PosSide{btse_futures::json::PosSide::LONG}, btse_futures::json::Side{btse_futures::json::Side::BUY}} ==
-    roq::PositionEffect::OPEN);
-static_assert(
-    Helper{btse_futures::json::PosSide{btse_futures::json::PosSide::LONG}, btse_futures::json::Side{btse_futures::json::Side::SELL}} ==
-    roq::PositionEffect::CLOSE);
-static_assert(
-    Helper{btse_futures::json::PosSide{btse_futures::json::PosSide::SHORT}, btse_futures::json::Side{btse_futures::json::Side::BUY}} ==
-    roq::PositionEffect::CLOSE);
-static_assert(
-    Helper{btse_futures::json::PosSide{btse_futures::json::PosSide::SHORT}, btse_futures::json::Side{btse_futures::json::Side::SELL}} ==
-    roq::PositionEffect::OPEN);
-static_assert(
-    Helper{btse_futures::json::PosSide{btse_futures::json::PosSide::NET}, btse_futures::json::Side{btse_futures::json::Side::BUY}} ==
-    roq::PositionEffect::UNDEFINED);
-static_assert(
-    Helper{btse_futures::json::PosSide{btse_futures::json::PosSide::NET}, btse_futures::json::Side{btse_futures::json::Side::SELL}} ==
-    roq::PositionEffect::UNDEFINED);
-
-template <>
-template <>
-std::optional<roq::PositionEffect> Map<btse_futures::json::PosSide, btse_futures::json::Side>::helper() const {
   return Helper{args_};
 }
 
@@ -282,157 +213,45 @@ constexpr Helper<btse_futures::json::TimeInForce>::operator std::optional<roq::T
       return roq::TimeInForce::UNDEFINED;
     case UNKNOWN_INTERNAL:
       return roq::TimeInForce::UNDEFINED;
+    case GTC:
+      return roq::TimeInForce::GTC;
     case IOC:
       return roq::TimeInForce::IOC;
     case FOK:
       return roq::TimeInForce::FOK;
-    case GTC:
-      return roq::TimeInForce::GTC;
-    case POST_ONLY:
-      return roq::TimeInForce::GTC;
+    case HALFMIN:
+      return roq::TimeInForce::UNDEFINED;
+    case FIVEMIN:
+      return roq::TimeInForce::UNDEFINED;
+    case HOUR:
+      return roq::TimeInForce::UNDEFINED;
+    case TWELVEHOUR:
+      return roq::TimeInForce::UNDEFINED;
+    case DAY:
+      return roq::TimeInForce::UNDEFINED;
+    case WEEK:
+      return roq::TimeInForce::UNDEFINED;
+    case MONTH:
+      return roq::TimeInForce::UNDEFINED;
   }
   return {};
 }
 
 static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::UNDEFINED_INTERNAL}} == roq::TimeInForce::UNDEFINED);
+static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::GTC}} == roq::TimeInForce::GTC);
 static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::IOC}} == roq::TimeInForce::IOC);
 static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::FOK}} == roq::TimeInForce::FOK);
-static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::GTC}} == roq::TimeInForce::GTC);
-static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::POST_ONLY}} == roq::TimeInForce::GTC);
+static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::HALFMIN}} == roq::TimeInForce::UNDEFINED);
+static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::FIVEMIN}} == roq::TimeInForce::UNDEFINED);
+static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::HOUR}} == roq::TimeInForce::UNDEFINED);
+static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::TWELVEHOUR}} == roq::TimeInForce::UNDEFINED);
+static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::DAY}} == roq::TimeInForce::UNDEFINED);
+static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::WEEK}} == roq::TimeInForce::UNDEFINED);
+static_assert(Helper{btse_futures::json::TimeInForce{btse_futures::json::TimeInForce::MONTH}} == roq::TimeInForce::UNDEFINED);
 
 template <>
 template <>
 std::optional<roq::TimeInForce> Map<btse_futures::json::TimeInForce>::helper() const {
-  return Helper{args_};
-}
-
-// btse_futures::json::TradeScope => roq::Liquidity
-
-template <>
-template <>
-constexpr Helper<btse_futures::json::TradeScope>::operator std::optional<roq::Liquidity>() const {
-  switch (std::get<0>(args_)) {
-    using enum btse_futures::json::TradeScope::type_t;
-    case UNDEFINED_INTERNAL:
-      return roq::Liquidity::UNDEFINED;
-    case UNKNOWN_INTERNAL:
-      return roq::Liquidity::UNDEFINED;
-    case TAKER:
-      return roq::Liquidity::TAKER;
-    case MAKER:
-      return roq::Liquidity::MAKER;
-  }
-  return {};
-}
-
-static_assert(Helper{btse_futures::json::TradeScope{btse_futures::json::TradeScope::UNDEFINED_INTERNAL}} == roq::Liquidity::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeScope{btse_futures::json::TradeScope::TAKER}} == roq::Liquidity::TAKER);
-static_assert(Helper{btse_futures::json::TradeScope{btse_futures::json::TradeScope::MAKER}} == roq::Liquidity::MAKER);
-
-template <>
-template <>
-std::optional<roq::Liquidity> Map<btse_futures::json::TradeScope>::helper() const {
-  return Helper{args_};
-}
-
-// btse_futures::json::TradeSide => roq::PositionEffect
-
-template <>
-template <>
-constexpr Helper<btse_futures::json::TradeSide>::operator std::optional<roq::PositionEffect>() const {
-  switch (std::get<0>(args_)) {
-    using enum btse_futures::json::TradeSide::type_t;
-    case UNDEFINED_INTERNAL:
-      return roq::PositionEffect::UNDEFINED;
-    case UNKNOWN_INTERNAL:
-      return roq::PositionEffect::UNDEFINED;
-    case CLOSE:
-      return roq::PositionEffect::CLOSE;
-    case OPEN:
-      return roq::PositionEffect::OPEN;
-    case REDUCE_CLOSE_LONG:
-      return roq::PositionEffect::CLOSE;
-    case REDUCE_CLOSE_SHORT:
-      return roq::PositionEffect::CLOSE;
-    case BURST_CLOSE_LONG:
-      return roq::PositionEffect::CLOSE;
-    case BURST_CLOSE_SHORT:
-      return roq::PositionEffect::CLOSE;
-    case OFFSET_CLOSE_LONG:
-      return roq::PositionEffect::CLOSE;
-    case OFFSET_CLOSE_SHORT:
-      return roq::PositionEffect::CLOSE;
-    case DELIVERY_CLOSE_LONG:
-      return roq::PositionEffect::CLOSE;
-    case DELIVERY_CLOSE_SHORT:
-      return roq::PositionEffect::CLOSE;
-    case DTE_SYS_ADL_CLOSE_LONG:
-      return roq::PositionEffect::CLOSE;
-    case DTE_SYS_ADL_CLOSE_SHORT:
-      return roq::PositionEffect::CLOSE;
-    case BUY_SINGLE:
-      return roq::PositionEffect::UNDEFINED;
-    case SELL_SINGLE:
-      return roq::PositionEffect::UNDEFINED;
-    case REDUCE_BUY_SINGLE:
-      return roq::PositionEffect::UNDEFINED;
-    case REDUCE_SELL_SINGLE:
-      return roq::PositionEffect::UNDEFINED;
-    case BURST_BUY_SINGLE:
-      return roq::PositionEffect::UNDEFINED;
-    case BURST_SELL_SINGLE:
-      return roq::PositionEffect::UNDEFINED;
-    case DELIVERY_SELL_SINGLE:
-      return roq::PositionEffect::UNDEFINED;
-    case DELIVERY_BUY_SINGLE:
-      return roq::PositionEffect::UNDEFINED;
-    case DTE_SYS_ADL_BUY_IN_SINGLE_SIDE_MODE:
-      return roq::PositionEffect::UNDEFINED;
-    case DTE_SYS_ADL_SELL_IN_SINGLE_SIDE_MODE:
-      return roq::PositionEffect::UNDEFINED;
-    case OPEN_SHORT:
-      return roq::PositionEffect::OPEN;
-    case OPEN_LONG:
-      return roq::PositionEffect::OPEN;
-    case CLOSE_SHORT:
-      return roq::PositionEffect::CLOSE;
-    case CLOSE_LONG:
-      return roq::PositionEffect::CLOSE;
-  }
-  return {};
-}
-
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::UNDEFINED_INTERNAL}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::CLOSE}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::OPEN}} == roq::PositionEffect::OPEN);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::REDUCE_CLOSE_LONG}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::REDUCE_CLOSE_SHORT}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::BURST_CLOSE_LONG}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::BURST_CLOSE_SHORT}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::OFFSET_CLOSE_LONG}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::OFFSET_CLOSE_SHORT}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::DELIVERY_CLOSE_LONG}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::DELIVERY_CLOSE_SHORT}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::DTE_SYS_ADL_CLOSE_LONG}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::DTE_SYS_ADL_CLOSE_SHORT}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::BUY_SINGLE}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::SELL_SINGLE}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::REDUCE_BUY_SINGLE}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::REDUCE_SELL_SINGLE}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::BURST_BUY_SINGLE}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::BURST_SELL_SINGLE}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::DELIVERY_SELL_SINGLE}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::DELIVERY_BUY_SINGLE}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::DTE_SYS_ADL_BUY_IN_SINGLE_SIDE_MODE}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::DTE_SYS_ADL_SELL_IN_SINGLE_SIDE_MODE}} == roq::PositionEffect::UNDEFINED);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::OPEN_SHORT}} == roq::PositionEffect::OPEN);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::CLOSE_LONG}} == roq::PositionEffect::CLOSE);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::OPEN_SHORT}} == roq::PositionEffect::OPEN);
-static_assert(Helper{btse_futures::json::TradeSide{btse_futures::json::TradeSide::CLOSE_LONG}} == roq::PositionEffect::CLOSE);
-
-template <>
-template <>
-std::optional<roq::PositionEffect> Map<btse_futures::json::TradeSide>::helper() const {
   return Helper{args_};
 }
 
@@ -467,36 +286,6 @@ std::optional<roq::UpdateType> Map<btse_futures::json::Type>::helper() const {
 
 // roq => btse_futures::json
 
-// roq::MarginMode => btse_futures::json::MarginMode
-
-template <>
-template <>
-constexpr Helper<roq::MarginMode>::operator std::optional<btse_futures::json::MarginMode>() const {
-  switch (std::get<0>(args_)) {
-    using enum roq::MarginMode;
-    case UNDEFINED:
-      return btse_futures::json::MarginMode::UNDEFINED_INTERNAL;
-    case CROSS:
-      return btse_futures::json::MarginMode::CROSSED;
-    case ISOLATED:
-      return btse_futures::json::MarginMode::ISOLATED;
-    case PORTFOLIO:
-      return btse_futures::json::MarginMode::UNDEFINED_INTERNAL;
-  }
-  return {};
-}
-
-static_assert(Helper{roq::MarginMode::UNDEFINED} == btse_futures::json::MarginMode{btse_futures::json::MarginMode::UNDEFINED_INTERNAL});
-static_assert(Helper{roq::MarginMode::CROSS} == btse_futures::json::MarginMode{btse_futures::json::MarginMode::CROSSED});
-static_assert(Helper{roq::MarginMode::ISOLATED} == btse_futures::json::MarginMode{btse_futures::json::MarginMode::ISOLATED});
-static_assert(Helper{roq::MarginMode::PORTFOLIO} == btse_futures::json::MarginMode{btse_futures::json::MarginMode::UNDEFINED_INTERNAL});
-
-template <>
-template <>
-std::optional<btse_futures::json::MarginMode> Map<roq::MarginMode>::helper() const {
-  return Helper{args_};
-}
-
 // roq::OrderType => btse_futures::json::OrderType
 
 template <>
@@ -521,80 +310,6 @@ static_assert(Helper{roq::OrderType::LIMIT} == btse_futures::json::OrderType{bts
 template <>
 template <>
 std::optional<btse_futures::json::OrderType> Map<roq::OrderType>::helper() const {
-  return Helper{args_};
-}
-
-// {roq::PositionEffect, roq::Side} => btse_futures::json::PosSide
-
-template <>
-template <>
-constexpr Helper<roq::PositionEffect, roq::Side>::operator std::optional<btse_futures::json::PosSide>() const {
-  switch (std::get<0>(args_)) {
-    using enum roq::PositionEffect;
-    case UNDEFINED:
-      return btse_futures::json::PosSide::UNDEFINED_INTERNAL;
-    case OPEN:
-      switch (std::get<1>(args_)) {
-        using enum roq::Side;
-        case UNDEFINED:
-          return btse_futures::json::PosSide::UNDEFINED_INTERNAL;
-        case BUY:
-          return btse_futures::json::PosSide::LONG;
-        case SELL:
-          return btse_futures::json::PosSide::SHORT;
-      }
-      break;
-    case CLOSE:
-      switch (std::get<1>(args_)) {
-        using enum roq::Side;
-        case UNDEFINED:
-          return btse_futures::json::PosSide::UNDEFINED_INTERNAL;
-        case BUY:
-          return btse_futures::json::PosSide::SHORT;
-        case SELL:
-          return btse_futures::json::PosSide::LONG;
-      }
-      break;
-  }
-  return {};
-}
-
-static_assert(Helper{roq::PositionEffect::UNDEFINED, roq::Side::UNDEFINED} == btse_futures::json::PosSide{btse_futures::json::PosSide::UNDEFINED_INTERNAL});
-static_assert(Helper{roq::PositionEffect::OPEN, roq::Side::BUY} == btse_futures::json::PosSide{btse_futures::json::PosSide::LONG});
-static_assert(Helper{roq::PositionEffect::OPEN, roq::Side::SELL} == btse_futures::json::PosSide{btse_futures::json::PosSide::SHORT});
-static_assert(Helper{roq::PositionEffect::CLOSE, roq::Side::BUY} == btse_futures::json::PosSide{btse_futures::json::PosSide::SHORT});
-static_assert(Helper{roq::PositionEffect::CLOSE, roq::Side::SELL} == btse_futures::json::PosSide{btse_futures::json::PosSide::LONG});
-
-template <>
-template <>
-std::optional<btse_futures::json::PosSide> Map<roq::PositionEffect, roq::Side>::helper() const {
-  return Helper{args_};
-}
-
-// roq::PositionEffect => btse_futures::json::TradeSide
-
-template <>
-template <>
-constexpr Helper<roq::PositionEffect>::operator std::optional<btse_futures::json::TradeSide>() const {
-  switch (std::get<0>(args_)) {
-    using enum roq::PositionEffect;
-    case UNDEFINED:
-      return btse_futures::json::TradeSide::UNDEFINED_INTERNAL;
-    case OPEN:
-      return btse_futures::json::TradeSide::OPEN;
-    case CLOSE:
-      return btse_futures::json::TradeSide::CLOSE;
-  }
-  return {};
-}
-
-static_assert(Helper{roq::PositionEffect::UNDEFINED} == btse_futures::json::TradeSide{btse_futures::json::TradeSide::UNDEFINED_INTERNAL});
-static_assert(Helper{roq::PositionEffect::OPEN} == btse_futures::json::TradeSide{btse_futures::json::TradeSide::OPEN});
-static_assert(Helper{roq::PositionEffect::CLOSE} == btse_futures::json::TradeSide{btse_futures::json::TradeSide::CLOSE});
-
-template <>
-template <>
-std::optional<btse_futures::json::TradeSide> Map<roq::PositionEffect>::helper() const {
   return Helper{args_};
 }
 
@@ -627,7 +342,6 @@ std::optional<btse_futures::json::Side> Map<roq::Side>::helper() const {
 
 // roq::TimeInForce => btse_futures::json::Force
 
-// POST_ONLY ???
 template <>
 template <>
 constexpr Helper<roq::TimeInForce>::operator std::optional<btse_futures::json::TimeInForce>() const {

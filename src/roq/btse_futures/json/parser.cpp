@@ -99,16 +99,16 @@ bool Parser::dispatch(
             return true;
             //
           case POSITIONS_V3:
-            result = true;
+            result = dispatch_helper<Positions>(handler, message, buffer_stack, trace_info);
             return true;
           case ALL_POSITION_V4:
-            result = true;
+            result = dispatch_helper<AllPosition>(handler, message, buffer_stack, trace_info);
             return true;
           case NOTIFICATION_API_V4:
-            result = true;
+            result = dispatch_helper<Notification>(handler, message, buffer_stack, trace_info);
             return true;
           case FILLS_V2:
-            result = true;
+            result = dispatch_helper<Fills>(handler, message, buffer_stack, trace_info);
             return true;
         }
         break;
