@@ -1,0 +1,9 @@
+{
+  "name": "roq/btse_futures/json/PositionDirection",
+  "type": "enum",
+  "values": [
+    {
+      "name": "NOT_SURE"
+    }
+  ]
+}

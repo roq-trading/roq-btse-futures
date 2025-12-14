@@ -15,7 +15,7 @@ using namespace Catch::literals;
 
 using value_type = json::PlaceOrderAck;
 
-TEST_CASE("simple", "[json_place_order_ack]") {
+TEST_CASE("failure", "[json_place_order_ack]") {
   auto message =
       R"([{)"
       R"("status":8,)"
@@ -49,6 +49,45 @@ TEST_CASE("simple", "[json_place_order_ack]") {
     REQUIRE(std::size(obj.data) == 1);
     auto &d0 = obj.data[0];
     CHECK(d0.status == 8);
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
+}
+
+TEST_CASE("success", "[json_place_order_ack]") {
+  auto message = R"([{)"
+                 R"("status":2,)"
+                 R"("symbol":"BTC-PERP",)"
+                 R"("orderType":76,)"
+                 R"("price":32000,)"
+                 R"("side":"BUY",)"
+                 R"("orderID":"c9a173ab-0fc8-4bdc-b940-1c7d7fe9fb89",)"
+                 R"("timestamp":1765718100570,)"
+                 R"("triggerPrice":0,)"
+                 R"("trigger":false,)"
+                 R"("deviation":100,)"
+                 R"("stealth":100,)"
+                 R"("message":"",)"
+                 R"("avgFilledPrice":0,)"
+                 R"("clOrderID":"DgAC_ntg6kUAAQAAAAAA",)"
+                 R"("originalOrderSize":1,)"
+                 R"("currentOrderSize":1,)"
+                 R"("filledSize":0,)"
+                 R"("totalFilledSize":0,)"
+                 R"("remainingSize":1,)"
+                 R"("postOnly":false,)"
+                 R"("orderDetailType":null,)"
+                 R"("positionMode":"ONE_WAY",)"
+                 R"("positionDirection":null,)"
+                 R"("positionId":"BTC-PERP-USDT",)"
+                 R"("time_in_force":"GTC")"
+                 R"(})"
+                 R"(])";
+  auto helper = [&](value_type &obj) {
+    REQUIRE(std::size(obj.data) == 1);
+    auto &d0 = obj.data[0];
+    CHECK(d0.status == 2);
   };
   core::json::BufferStack buffers{8192, 1};
   value_type obj{message, buffers};

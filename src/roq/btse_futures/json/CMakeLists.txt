@@ -10,7 +10,7 @@ set(AUTOGEN_SCHEMAS
     cancel_all_orders_ack_data.json
     cancel_all_orders_ack_data_list_item.json
     cancel_all_orders_ack.json
-    cancel_order_ack_data.json
+    cancel_order_ack_item.json
     cancel_order_ack.json
     error.json
     event.json
@@ -18,6 +18,7 @@ set(AUTOGEN_SCHEMAS
     fills.json
     get_market_summary_ack_item.json
     get_market_summary_ack.json
+    get_open_orders_ack_item.json
     get_open_orders_ack.json
     get_position_mode_ack_item.json
     get_position_mode_ack.json
@@ -26,14 +27,17 @@ set(AUTOGEN_SCHEMAS
     get_wallet_ack_item.json
     get_wallet_ack.json
     login.json
-    modify_order_ack_data.json
+    modify_order_ack_item.json
     modify_order_ack.json
     notification_data_item.json
     notification.json
+    order_state.json
     order_type.json
     place_order_ack_item.json
     place_order_ack.json
     pong.json
+    position_direction.json
+    position_mode.json
     positions_data_item.json
     positions.json
     side.json

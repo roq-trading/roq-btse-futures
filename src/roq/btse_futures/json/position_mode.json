@@ -1,0 +1,15 @@
+{
+  "name": "roq/btse_futures/json/PositionMode",
+  "type": "enum",
+  "values": [
+    {
+      "name": "ONE_WAY"
+    },
+    {
+      "name": "HEDGE"
+    },
+    {
+      "name": "ISOLATED"
+    }
+  ]
+}

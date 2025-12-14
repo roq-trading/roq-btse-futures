@@ -15,6 +15,9 @@ namespace roq {
 namespace btse_futures {
 namespace json {
 
+// stopPrice + txType
+// postOnly
+// reduceOnly
 std::string_view Encoder::place_order(
     std::string &buffer, CreateOrder const &create_order, server::oms::Order const &order, std::string_view const &request_id) {
   auto side = map(create_order.side).template get<json::Side>();
@@ -44,47 +47,6 @@ std::string_view Encoder::place_order(
       request_id);
   return buffer;
 }
-
-/*
-symbol  String  Yes Market symbol
-price Double  No  Mandatory unless creating a MARKET order. Order price
-size  Long  Yes Order size in contract size (this remains unchanged even after risk limit adjustment)
-  side  String  Yes Trade side. Values are: [Buy, SELL]
-  time_in_force String  No  Time validity of the order
-  GTC: Good till Cancel
-  IOC: Immediate or Cancel
-  FOK: Fill or Kill
-
-  HALFMIN: Order valid for 30 seconds
-  FIVEMIN: Order valid for 5 mins
-  HOUR: Order valid for an hour
-  TWELVEHOUR: Order valid for 12 hours
-  DAY: Order valid for a day
-  WEEK: Order valid for a week
-  MONTH: Order valid for a month
-
-
-  type  String  Yes Order type
-  LIMIT: Limit Orders
-  MARKET: Market Orders
-  OCO: One cancel the other
-  */
-/*
-txType  String  No  Used for Stop orders or trigger orders
-STOP: Stop Order, triggerPrice is mandatory
-TRIGGER: Trigger order, triggerPrice is mandatory
-LIMIT: Default, used when its not a Stop order nor Trigger order
-stopPrice Double  No  Mandatory when creating an OCO order. Indicates the stop price
-triggerPrice  Double  No  Mandatory when creating a Stop, Trigger, OCO order. Indicates the trigger price
-trailValue  Double  No  Trail value. When an order is placed with trailValue, Take Profit (TP) and Stop Loss (SL) settings are not supported.
-*/
-/*
-postOnly Boolean No Boolean to indicate if this is a post only order.For post only orders,
-traders are charged maker fees reduceOnly Boolean No Boolean to indicate if this is a reduce only order, if in hedge mode,
-it is used to reduce the specified position,
-ex : sell to reduce Long position,
-   buy to reduce short position.clOrderID String No Custom order Id
-*/
 
 std::string_view Encoder::modify_order(
     std::string &buffer, ModifyOrder const &modify_order, server::oms::Order const &order, [[maybe_unused]] std::string_view const &request_id) {
@@ -130,17 +92,12 @@ std::string_view Encoder::modify_order(
 std::string_view Encoder::cancel_order(
     std::string &buffer, CancelOrder const &, server::oms::Order const &order, [[maybe_unused]] std::string_view const &request_id) {
   buffer.clear();
-  fmt::format_to(
-      std::back_inserter(buffer),
-      R"({{)"
-      R"("symbol":"{}")"sv,
-      order.symbol);
+  fmt::format_to(std::back_inserter(buffer), "?symbol={}"sv, order.symbol);
   if (std::empty(order.external_order_id)) {
-    fmt::format_to(std::back_inserter(buffer), R"(,"clOrderID":"{}")"sv, order.client_order_id);
+    fmt::format_to(std::back_inserter(buffer), "&clOrderID={}"sv, order.client_order_id);
   } else {
-    fmt::format_to(std::back_inserter(buffer), R"(,"orderID":"{}")"sv, order.external_order_id);
+    fmt::format_to(std::back_inserter(buffer), "&orderID={}"sv, order.external_order_id);
   }
-  fmt::format_to(std::back_inserter(buffer), R"(}})"sv);
   return buffer;
 }
 

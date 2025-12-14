@@ -84,7 +84,9 @@ TEST_CASE("simple", "[json_get_market_summary_ack]") {
                  R"(})"
                  R"(])";
   auto helper = [&](value_type &obj) {
-    // CHECK(obj.status == json::Status::OK);
+    REQUIRE(std::size(obj.data) == 2);
+    auto &d0 = obj.data[0];
+    CHECK(d0.symbol == "TIAPFC"sv);
   };
   core::json::BufferStack buffers{8192, 2};
   value_type obj{message, buffers};

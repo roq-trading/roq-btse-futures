@@ -80,3 +80,20 @@ TEST_CASE("order_size_too_small", "[json_error]") {
   value_type obj{message, buffers};
   helper(obj);
 }
+
+TEST_CASE("unknown_cl_ord_id", "[json_error]") {
+  auto message = R"({)"
+                 R"("status":400,)"
+                 R"("errorCode":-1,)"
+                 R"("message":"clOrderID doesn't exist: XgACx2sZ6kUAAQAAAAAA",)"
+                 R"("extraData":null)"
+                 R"(})";
+  auto helper = [&](value_type &obj) {
+    CHECK(obj.status == 400);
+    CHECK(obj.error_code == -1);
+    CHECK(obj.message == "clOrderID doesn't exist: XgACx2sZ6kUAAQAAAAAA"sv);
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
+}

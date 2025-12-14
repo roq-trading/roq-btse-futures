@@ -756,12 +756,8 @@ void OrderEntry::amend_order_ack(Trace<web::rest::Response> const &event, uint8_
     auto handle_success = [&](auto &body) {
       log::warn("DEBUG {}"sv, body);
       json::ModifyOrderAck modify_order_ack{body, decode_buffer_};
-      if (modify_order_ack.code == 0) {
-        Trace event_2{event, modify_order_ack};
-        (*this)(event_2, user_id, order_id, version);
-      } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(modify_order_ack.code), modify_order_ack.msg);
-      }
+      Trace event_2{event, modify_order_ack};
+      (*this)(event_2, user_id, order_id, version);
     };
     process_response(event, handle_error, handle_success);
   });
@@ -787,17 +783,17 @@ void OrderEntry::cancel_order(
     }
     auto &[message_info, cancel_order] = event;
     auto path = shared_.api.order_management.cancel_order;
-    auto body = json::Encoder::cancel_order(encode_buffer_, cancel_order, order, request_id);
-    log::warn(R"(DEBUG body="{}")"sv, body);
-    auto headers = account_.create_headers(path, body);
+    auto query = json::Encoder::cancel_order(encode_buffer_, cancel_order, order, request_id);
+    log::warn(R"(DEBUG query="{}")"sv, query);
+    auto headers = account_.create_headers(path);
     auto request = web::rest::Request{
         .method = web::http::Method::DELETE,
         .path = path,
-        .query = {},
+        .query = query,
         .accept = web::http::Accept::APPLICATION_JSON,
         .content_type = web::http::ContentType::APPLICATION_JSON,
         .headers = headers,
-        .body = body,
+        .body = {},
         .quality_of_service = {},
     };
     auto callback = [this, user_id = message_info.source, order_id = cancel_order.order_id, version = cancel_order.version](
@@ -831,12 +827,8 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
     auto handle_success = [&](auto &body) {
       log::warn("DEBUG {}"sv, body);
       json::CancelOrderAck cancel_order_ack{body, decode_buffer_};
-      if (cancel_order_ack.code == 0) {
-        Trace event_2{event, cancel_order_ack};
-        (*this)(event_2, user_id, order_id, version);
-      } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(cancel_order_ack.code), cancel_order_ack.msg);
-      }
+      Trace event_2{event, cancel_order_ack};
+      (*this)(event_2, user_id, order_id, version);
     };
     process_response(event, handle_error, handle_success);
   });

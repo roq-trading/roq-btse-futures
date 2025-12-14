@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/json/OrderState",
+  "type": "enum",
+  "values": [
+    {
+      "name": "STATUS_ACTIVE"
+    },
+    {
+      "name": "STATUS_INACTIVE"
+    }
+  ]
+}
