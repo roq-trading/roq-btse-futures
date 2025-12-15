@@ -186,7 +186,7 @@ void OrderBook::operator()(ConnectionStatus status) {
   }
 }
 
-void OrderBook::ping(std::chrono::nanoseconds now) {
+void OrderBook::ping([[maybe_unused]] std::chrono::nanoseconds now) {
   (*connection_).send_text(PING);
 }
 

@@ -3,7 +3,10 @@
   "type": "enum",
   "values": [
     {
-      "name": "NOT_SURE"
+      "name": "LONG"
+    },
+    {
+      "name": "SHORT"
     }
   ]
 }

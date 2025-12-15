@@ -162,3 +162,117 @@ TEST_CASE("modified", "[json_notification]") {
   };
   ParserTester<value_type>::dispatch(helper, message, 8192, 1);
 }
+
+TEST_CASE("buy_filled", "[json_notification]") {
+  auto message = R"({)"
+                 R"("topic":"notificationApiV4",)"
+                 R"("data":[{)"
+                 R"("symbol":"BTC-PERP",)"
+                 R"("orderID":"aa0eb277-2d36-4fd0-8fa0-bc78b139ccdc",)"
+                 R"("side":"BUY",)"
+                 R"("orderType":76,)"
+                 R"("type":0,)"
+                 R"("price":89315.3,)"  // note! the limit-price was 89400, this is last-traded-price
+                 R"("triggerPrice":0,)"
+                 R"("pegPriceDeviation":1,)"
+                 R"("stealth":1,)"
+                 R"("status":4,)"
+                 R"("timestamp":1765767211936,)"
+                 R"("avgFilledPrice":89315.3,)"
+                 R"("clOrderID":"LgACO7WlB0YAAQAAAAAA",)"
+                 R"("postOnly":false,)"
+                 R"("maker":false,)"
+                 R"("positionId":"BTC-PERP-USDT",)"
+                 R"("orderDetailType":null,)"
+                 R"("orderUserInitiated":true,)"
+                 R"("originalOrderSize":1,)"
+                 R"("currentOrderSize":1,)"
+                 R"("filledSize":1,)"
+                 R"("totalFilledSize":1,)"
+                 R"("remainingSize":0,)"
+                 R"("time_in_force":"GTC")"
+                 R"(})"
+                 R"(])"
+                 R"(})";
+  auto helper = [](value_type const &obj) {
+    CHECK(obj.topic == "notificationApiV4"sv);
+    REQUIRE(std::size(obj.data) == 1);
+  };
+  ParserTester<value_type>::dispatch(helper, message, 8192, 1);
+}
+
+TEST_CASE("sell_filled", "[json_notification]") {
+  auto message = R"({)"
+                 R"("topic":"notificationApiV4",)"
+                 R"("data":[{)"
+                 R"("symbol":"BTC-PERP",)"
+                 R"("orderID":"73649e44-360a-4287-8952-3dd5da2f2e4b",)"
+                 R"("side":"SELL",)"
+                 R"("orderType":76,)"
+                 R"("type":0,)"
+                 R"("price":89289.7,)"
+                 R"("triggerPrice":0,)"
+                 R"("pegPriceDeviation":1,)"
+                 R"("stealth":1,)"
+                 R"("status":4,)"
+                 R"("timestamp":1765771269202,)"
+                 R"("avgFilledPrice":89289.7,)"
+                 R"("clOrderID":"MQACLRoOCkYAAQAAAAAA",)"
+                 R"("postOnly":false,)"
+                 R"("maker":false,)"
+                 R"("positionId":"BTC-PERP-USDT",)"
+                 R"("orderDetailType":null,)"
+                 R"("orderUserInitiated":true,)"
+                 R"("originalOrderSize":1,)"
+                 R"("currentOrderSize":1,)"
+                 R"("filledSize":1,)"
+                 R"("totalFilledSize":1,)"
+                 R"("remainingSize":0,)"
+                 R"("time_in_force":"GTC")"
+                 R"(})"
+                 R"(])"
+                 R"(})";
+  auto helper = [](value_type const &obj) {
+    CHECK(obj.topic == "notificationApiV4"sv);
+    REQUIRE(std::size(obj.data) == 1);
+  };
+  ParserTester<value_type>::dispatch(helper, message, 8192, 1);
+}
+
+TEST_CASE("filled_maker", "[json_notification]") {
+  auto message = R"({)"
+                 R"("topic":"notificationApiV4",)"
+                 R"("data":[{)"
+                 R"("symbol":"BTC-PERP",)"
+                 R"("orderID":"e9013cba-e46e-4d00-8503-b8851ec35339",)"
+                 R"("side":"BUY",)"
+                 R"("orderType":76,)"
+                 R"("type":0,)"
+                 R"("price":89760,)"
+                 R"("triggerPrice":0,)"
+                 R"("pegPriceDeviation":1,)"
+                 R"("stealth":1,)"
+                 R"("status":4,)"
+                 R"("timestamp":1765774482920,)"
+                 R"("avgFilledPrice":89760,)"
+                 R"("clOrderID":"6wACj6XIC0YAAQAAAAAA",)"
+                 R"("postOnly":false,)"
+                 R"("maker":false,)"  // XXX FIXME TODO ???
+                 R"("positionId":"BTC-PERP-USDT",)"
+                 R"("orderDetailType":null,)"
+                 R"("orderUserInitiated":false,)"
+                 R"("originalOrderSize":1,)"
+                 R"("currentOrderSize":1,)"
+                 R"("filledSize":1,)"
+                 R"("totalFilledSize":1,)"
+                 R"("remainingSize":0,)"
+                 R"("time_in_force":"GTC")"
+                 R"(})"
+                 R"(])"
+                 R"(})";
+  auto helper = [](value_type const &obj) {
+    CHECK(obj.topic == "notificationApiV4"sv);
+    REQUIRE(std::size(obj.data) == 1);
+  };
+  ParserTester<value_type>::dispatch(helper, message, 8192, 1);
+}

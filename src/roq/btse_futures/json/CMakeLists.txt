@@ -22,15 +22,18 @@ set(AUTOGEN_SCHEMAS
     get_open_orders_ack.json
     get_position_mode_ack_item.json
     get_position_mode_ack.json
+    get_positions_ack_item.json
     get_positions_ack.json
     get_wallet_ack_item_assets_item.json
     get_wallet_ack_item.json
     get_wallet_ack.json
     login.json
+    margin_type.json
     modify_order_ack_item.json
     modify_order_ack.json
     notification_data_item.json
     notification.json
+    order_mode.json
     order_state.json
     order_type.json
     place_order_ack_item.json
@@ -38,6 +41,7 @@ set(AUTOGEN_SCHEMAS
     pong.json
     position_direction.json
     position_mode.json
+    position_order_type.json
     positions_data_item.json
     positions.json
     side.json

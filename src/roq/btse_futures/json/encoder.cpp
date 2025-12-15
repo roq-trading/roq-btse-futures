@@ -15,14 +15,14 @@ namespace roq {
 namespace btse_futures {
 namespace json {
 
-// stopPrice + txType
-// postOnly
-// reduceOnly
+// XXX FIXME TODO stop
 std::string_view Encoder::place_order(
     std::string &buffer, CreateOrder const &create_order, server::oms::Order const &order, std::string_view const &request_id) {
   auto side = map(create_order.side).template get<json::Side>();
   auto type = map(create_order.order_type).template get<json::OrderType>();
   auto time_in_force = map(create_order.time_in_force).template get<json::TimeInForce>();
+  auto post_only = [&]() { return create_order.execution_instructions.has(ExecutionInstruction::PARTICIPATE_DO_NOT_INITIATE); }();
+  auto reduce_only = [&]() { return create_order.execution_instructions.has(ExecutionInstruction::DO_NOT_INCREASE); }();
   buffer.clear();
   fmt::format_to(
       std::back_inserter(buffer),
@@ -30,13 +30,18 @@ std::string_view Encoder::place_order(
       R"("symbol":"{}")"
       R"(,"side":"{}")"
       R"(,"type":"{}")"
-      R"(,"time_in_force":"{}")"
+      R"(,"postOnly":{})"
+      R"(,"reduceOnly":{})"
       R"(,"size":{})"sv,
       create_order.symbol,
       side.as_raw_text(),
       type.as_raw_text(),
-      time_in_force.as_raw_text(),
+      post_only,
+      reduce_only,
       Decimal{create_order.quantity, order.quantity_precision.precision});
+  if (create_order.time_in_force != roq::TimeInForce::UNDEFINED) {
+    fmt::format_to(std::back_inserter(buffer), R"(,"time_in_force":"{}")"sv, time_in_force.as_raw_text());
+  }
   if (!std::isnan(create_order.price)) {
     fmt::format_to(std::back_inserter(buffer), R"(,"price":{})"sv, Decimal{create_order.price, order.price_precision.precision});
   }

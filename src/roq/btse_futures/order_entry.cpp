@@ -398,8 +398,8 @@ void OrderEntry::get_positions() {
     };
     auto sequence = download_.sequence();
     (*connection_)("positions"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_assets;
-      Trace event{trace_assets, response};
+      TraceInfo trace_info;
+      Trace event{trace_info, response};
       get_positions_ack(event, sequence);
     });
   });
@@ -408,7 +408,7 @@ void OrderEntry::get_positions() {
 void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
   auto const state = OrderEntryState::POSITIONS;
   profile_.positions_ack([&]() {
-    auto &[trace_assets, response] = event;
+    auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       download_.retry(state);
@@ -419,7 +419,7 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
         log::info("Download state={} has already been processed"sv, state);
       } else {
         json::GetPositionsAck positions_ack{body, decode_buffer_};
-        Trace event{trace_assets, positions_ack};
+        Trace event{trace_info, positions_ack};
         (*this)(event);
         download_.check(state);
       }
@@ -429,8 +429,53 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
 }
 
 void OrderEntry::operator()(Trace<json::GetPositionsAck> const &event) {
-  auto &[trace_assets, positions_ack] = event;
+  auto &[trace_info, positions_ack] = event;
   log::info<4>("positions_ack={}"sv, positions_ack);
+  for (auto &item : positions_ack.data) {
+    auto long_quantity = [&]() -> double {
+      switch (item.side) {
+        using enum json::Side::type_t;
+        case UNDEFINED_INTERNAL:
+          break;
+        case UNKNOWN_INTERNAL:
+          break;
+        case BUY:
+          return item.size;
+        case SELL:
+          break;
+      }
+      return NaN;
+    }();
+    auto short_quantity = [&]() -> double {
+      switch (item.side) {
+        using enum json::Side::type_t;
+        case UNDEFINED_INTERNAL:
+          break;
+        case UNKNOWN_INTERNAL:
+          break;
+        case BUY:
+          break;
+        case SELL:
+          return item.size;
+      }
+      return NaN;
+    }();
+    auto position_update = PositionUpdate{
+        .stream_id = stream_id_,
+        .account = account_.name,
+        .exchange = shared_.settings.exchange,
+        .symbol = item.symbol,
+        .margin_mode = {},  // margin_type_name ???
+        .external_account = {},
+        .long_quantity = long_quantity,
+        .short_quantity = short_quantity,
+        .update_type = UpdateType::SNAPSHOT,
+        .exchange_time_utc = {},
+        .exchange_sequence = {},
+        .sending_time_utc = {},
+    };
+    create_trace_and_dispatch(handler_, trace_info, position_update, true);
+  }
 }
 
 // open-orders

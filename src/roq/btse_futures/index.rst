@@ -261,7 +261,7 @@ Comments
 --------
 
 * TODO check if order book max-depth is really 50 when applying incremental updates
-* TODO order management hasn't been implemented
+* Achieving maker fees requires more than placing a resting order
 
 
 References

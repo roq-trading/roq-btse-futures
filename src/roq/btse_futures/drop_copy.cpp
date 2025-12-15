@@ -4,6 +4,7 @@
 
 #include "roq/mask.hpp"
 
+#include "roq/utils/safe_cast.hpp"
 #include "roq/utils/update.hpp"
 
 #include "roq/utils/exceptions/unhandled.hpp"
@@ -197,7 +198,7 @@ void DropCopy::login() {
 
 void DropCopy::subscribe() {
   subscribe("positionsV3"sv);
-  subscribe("allPositionV4"sv);
+  // subscribe("allPositionV4"sv);  // note! looks like snapshot -- doesn't notify zero position
   subscribe("notificationApiV4"sv);
   subscribe("fillsV2"sv);
 }
@@ -215,7 +216,6 @@ void DropCopy::subscribe(std::string_view const &topic) {
 }
 
 void DropCopy::parse(std::string_view const &message) {
-  log::warn("DEBUG message={}"sv, message);
   profile_.parse([&]() {
     auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
     try {
@@ -264,13 +264,61 @@ void DropCopy::operator()(Trace<json::Login> const &event) {
 void DropCopy::operator()(Trace<json::Positions> const &event) {
   auto &[trace_info, positions] = event;
   log::info<2>("positions={}"sv, positions);
-  log::warn("DEBUG positions={}"sv, positions);
+  auto strip_symbol_from_market_name = [](auto &market_name) {
+    auto pos = market_name.find_last_of('-');
+    return market_name.substr(0, pos);
+  };
+  for (auto &item : positions.data) {
+    auto long_quantity = [&]() -> double {
+      switch (item.position_direction) {
+        using enum json::PositionDirection::type_t;
+        case UNDEFINED_INTERNAL:
+          break;
+        case UNKNOWN_INTERNAL:
+          break;
+        case LONG:
+          return item.total_contracts;
+        case SHORT:
+          break;
+      }
+      return NaN;
+    }();
+    auto short_quantity = [&]() -> double {
+      switch (item.position_direction) {
+        using enum json::PositionDirection::type_t;
+        case UNDEFINED_INTERNAL:
+          break;
+        case UNKNOWN_INTERNAL:
+          break;
+        case LONG:
+          break;
+        case SHORT:
+          return item.total_contracts;
+      }
+      return NaN;
+    }();
+    auto position_update = PositionUpdate{
+        .stream_id = stream_id_,
+        .account = account_.name,
+        .exchange = shared_.settings.exchange,
+        .symbol = strip_symbol_from_market_name(item.market_name),  // note!
+        .margin_mode = {},                                          // margin_type_name ???
+        .external_account = {},
+        .long_quantity = long_quantity,
+        .short_quantity = short_quantity,
+        .update_type = UpdateType::INCREMENTAL,
+        .exchange_time_utc = {},
+        .exchange_sequence = {},
+        .sending_time_utc = {},
+    };
+    create_trace_and_dispatch(handler_, trace_info, position_update, true);
+  }
 }
 
+// note! not using this because we don't get any (real) update when the position goes to zero
 void DropCopy::operator()(Trace<json::AllPosition> const &event) {
   auto &[trace_info, all_position] = event;
   log::info<2>("all_position={}"sv, all_position);
-  log::warn("DEBUG all_position={}"sv, all_position);
 }
 
 void DropCopy::operator()(Trace<json::Notification> const &event) {
@@ -338,7 +386,51 @@ void DropCopy::operator()(Trace<json::Notification> const &event) {
 void DropCopy::operator()(Trace<json::Fills> const &event) {
   auto &[trace_info, fills] = event;
   log::info<2>("fills={}"sv, fills);
-  log::warn("DEBUG fills={}"sv, fills);
+  for (auto &item : fills.data) {
+    auto exchange_or_request_id = [&]() -> std::string_view {
+      if (std::empty(item.cl_order_id)) {
+        return item.order_id;
+      }
+      return item.cl_order_id;
+    }();
+    auto liquidity = item.maker ? Liquidity::MAKER : Liquidity::TAKER;
+    auto fill = Fill{
+        .exchange_time_utc = item.timestamp,
+        .external_trade_id = item.trade_id,
+        .quantity = item.size,
+        .price = item.price,
+        .liquidity = liquidity,
+        .commission_amount = item.fee_amount,
+        .commission_currency = item.fee_currency,
+        .base_amount = NaN,
+        .quote_amount = NaN,
+        .profit_loss_amount = NaN,
+    };
+    auto trade_update = TradeUpdate{
+        .stream_id = stream_id_,
+        .account = account_.name,
+        .order_id = {},
+        .exchange = shared_.settings.exchange,
+        .symbol = item.symbol,
+        .side = map(item.side),
+        .position_effect = {},
+        .margin_mode = {},
+        .create_time_utc = item.timestamp,
+        .update_time_utc = item.timestamp,
+        .external_account = {},
+        .external_order_id = item.order_id,
+        .client_order_id = item.cl_order_id,
+        .fills = {&fill, 1},
+        .routing_id = {},
+        .update_type = UpdateType::INCREMENTAL,
+        .exchange_time_utc = item.timestamp,
+        .exchange_sequence = utils::safe_cast(item.serial_id),
+        .sending_time_utc = {},
+        .user = {},
+        .strategy_id = {},
+    };
+    create_trace_and_dispatch(handler_, trace_info, trade_update, true, SOURCE_NONE, exchange_or_request_id);
+  }
 }
 
 }  // namespace btse_futures

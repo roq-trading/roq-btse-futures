@@ -55,7 +55,7 @@ TEST_CASE("failure", "[json_place_order_ack]") {
   helper(obj);
 }
 
-TEST_CASE("success", "[json_place_order_ack]") {
+TEST_CASE("limit_resting", "[json_place_order_ack]") {
   auto message = R"([{)"
                  R"("status":2,)"
                  R"("symbol":"BTC-PERP",)"
@@ -88,6 +88,84 @@ TEST_CASE("success", "[json_place_order_ack]") {
     REQUIRE(std::size(obj.data) == 1);
     auto &d0 = obj.data[0];
     CHECK(d0.status == 2);
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
+}
+
+TEST_CASE("buy_limit_filled", "[json_place_order_ack]") {
+  auto message = R"([{)"
+                 R"("status":4,)"
+                 R"("symbol":"BTC-PERP",)"
+                 R"("orderType":76,)"
+                 R"("price":89315.3,)"  // note! the limit-price was 89400, this is last-traded-price
+                 R"("side":"BUY",)"
+                 R"("orderID":"aa0eb277-2d36-4fd0-8fa0-bc78b139ccdc",)"
+                 R"("timestamp":1765767211936,)"
+                 R"("triggerPrice":0,)"
+                 R"("trigger":false,)"
+                 R"("deviation":100,)"
+                 R"("stealth":100,)"
+                 R"("message":"",)"
+                 R"("avgFilledPrice":89315.3,)"
+                 R"("clOrderID":"LgACO7WlB0YAAQAAAAAA",)"
+                 R"("originalOrderSize":1,)"
+                 R"("currentOrderSize":1,)"
+                 R"("filledSize":1,)"
+                 R"("totalFilledSize":1,)"
+                 R"("remainingSize":0,)"
+                 R"("postOnly":false,)"
+                 R"("orderDetailType":null,)"
+                 R"("positionMode":"ONE_WAY",)"
+                 R"("positionDirection":null,)"
+                 R"("positionId":"BTC-PERP-USDT",)"
+                 R"("time_in_force":"GTC")"
+                 R"(})"
+                 R"(])";
+  auto helper = [&](value_type &obj) {
+    REQUIRE(std::size(obj.data) == 1);
+    auto &d0 = obj.data[0];
+    CHECK(d0.status == 4);
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
+}
+
+TEST_CASE("sell_limit_filled", "[json_place_order_ack]") {
+  auto message = R"([{)"
+                 R"("status":4,)"
+                 R"("symbol":"BTC-PERP",)"
+                 R"("orderType":76,)"
+                 R"("price":89289.7,)"  // note! the limit-price was 89200, this is last-traded-price
+                 R"("side":"SELL",)"
+                 R"("orderID":"73649e44-360a-4287-8952-3dd5da2f2e4b",)"
+                 R"("timestamp":1765771269202,)"
+                 R"("triggerPrice":0,)"
+                 R"("trigger":false,)"
+                 R"("deviation":100,)"
+                 R"("stealth":100,)"
+                 R"("message":"",)"
+                 R"("avgFilledPrice":89289.7,)"
+                 R"("clOrderID":"MQACLRoOCkYAAQAAAAAA",)"
+                 R"("originalOrderSize":1,)"
+                 R"("currentOrderSize":1,)"
+                 R"("filledSize":1,)"
+                 R"("totalFilledSize":1,)"
+                 R"("remainingSize":0,)"
+                 R"("postOnly":false,)"
+                 R"("orderDetailType":null,)"
+                 R"("positionMode":"ONE_WAY",)"
+                 R"("positionDirection":null,)"
+                 R"("positionId":"BTC-PERP-USDT",)"
+                 R"("time_in_force":"GTC")"
+                 R"(})"
+                 R"(])";
+  auto helper = [&](value_type &obj) {
+    REQUIRE(std::size(obj.data) == 1);
+    auto &d0 = obj.data[0];
+    CHECK(d0.status == 4);
   };
   core::json::BufferStack buffers{8192, 1};
   value_type obj{message, buffers};

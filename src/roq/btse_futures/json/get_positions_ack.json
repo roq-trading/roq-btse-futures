@@ -4,7 +4,7 @@
   "values": [
     {
       "name": "data",
-      "type": "roq/btse_futures/json/GetPositionModeAckItem",
+      "type": "roq/btse_futures/json/GetPositionsAckItem",
       "array": "std/span"
     }
   ]

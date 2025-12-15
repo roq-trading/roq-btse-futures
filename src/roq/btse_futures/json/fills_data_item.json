@@ -3,7 +3,67 @@
   "type": "dictionary",
   "values": [
     {
+      "name": "orderId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "serialId",
+      "type": "std/int64"
+    },
+    {
+      "name": "clOrderId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "type",
+      "type": "std/int32"
+    },
+    {
       "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "side",
+      "type": "roq/btse_futures/json/Side"
+    },
+    {
+      "name": "price",
+      "type": "std/double"
+    },
+    {
+      "name": "size",
+      "type": "std/double"
+    },
+    {
+      "name": "feeAmount",
+      "type": "std/double"
+    },
+    {
+      "name": "feeCurrency",
+      "type": "std/string_view"
+    },
+    {
+      "name": "base",
+      "type": "std/string_view"
+    },
+    {
+      "name": "quote",
+      "type": "std/string_view"
+    },
+    {
+      "name": "maker",
+      "type": "std/bool"
+    },
+    {
+      "name": "contractSize",
+      "type": "std/double"
+    },
+    {
+      "name": "timestamp",
+      "type": "std/milliseconds"
+    },
+    {
+      "name": "tradeId",
       "type": "std/string_view"
     }
   ]
