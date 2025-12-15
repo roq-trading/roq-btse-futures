@@ -484,6 +484,45 @@ void OrderEntry::get_open_orders_ack(Trace<web::rest::Response> const &event, ui
 void OrderEntry::operator()(Trace<json::GetOpenOrdersAck> const &event) {
   auto &[trace_info, open_orders_ack] = event;
   log::info<4>("open_orders_ack={}"sv, open_orders_ack);
+  for (auto &item : open_orders_ack.data) {
+    auto order_status = map(item.order_state).template get<OrderStatus>();
+    auto order_update = server::oms::OrderUpdate{
+        .account = account_.name,
+        .exchange = shared_.settings.exchange,
+        .symbol = item.symbol,
+        .side = map(item.side),
+        .position_effect = {},
+        .margin_mode = {},
+        .max_show_quantity = NaN,
+        .order_type = map(item.order_type),
+        .time_in_force = map(item.time_in_force),
+        .execution_instructions = {},
+        .create_time_utc = item.timestamp,
+        .update_time_utc = item.timestamp,
+        .external_account = {},
+        .external_order_id = item.order_id,
+        .client_order_id = item.cl_order_id,
+        .order_status = order_status,
+        .quantity = item.current_order_size,
+        .price = item.price,
+        .stop_price = NaN,
+        .leverage = NaN,
+        .remaining_quantity = item.remaining_size,
+        .traded_quantity = item.total_filled_size,
+        .average_traded_price = item.avg_filled_price,
+        .last_traded_quantity = NaN,
+        .last_traded_price = NaN,
+        .last_liquidity = {},
+        .routing_id = {},
+        .max_request_version = {},
+        .max_response_version = {},
+        .max_accepted_version = {},
+        .update_type = UpdateType::SNAPSHOT,
+        .sending_time_utc = item.timestamp,
+    };
+    Trace event_2{trace_info, order_update};
+    (*this)(event_2, item.cl_order_id);
+  }
 }
 /*
 // fill_history

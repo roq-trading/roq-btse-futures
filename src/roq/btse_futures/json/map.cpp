@@ -141,6 +141,61 @@ std::optional<roq::OrderStatus> Map<int32_t>::helper() const {
   return Helper{args_};
 }
 
+// int32_t => roq::OrderType
+
+template <>
+template <>
+constexpr Helper<int32_t>::operator std::optional<roq::OrderType>() const {
+  switch (std::get<0>(args_)) {
+    case 76:  //  Limit Order
+      return roq::OrderType::LIMIT;
+    case 77:  //  Market Order
+      return roq::OrderType::MARKET;
+    case 80:  //  Algo orders
+      return roq::OrderType::UNDEFINED;
+  }
+  return {};
+}
+
+static_assert(Helper{int32_t{76}} == roq::OrderType::LIMIT);
+static_assert(Helper{int32_t{77}} == roq::OrderType::MARKET);
+static_assert(Helper{int32_t{80}} == roq::OrderType::UNDEFINED);
+
+template <>
+template <>
+std::optional<roq::OrderType> Map<int32_t>::helper() const {
+  return Helper{args_};
+}
+
+// btse_futures::json::OrderState => roq::OrderStatus
+
+template <>
+template <>
+constexpr Helper<btse_futures::json::OrderState>::operator std::optional<roq::OrderStatus>() const {
+  switch (std::get<0>(args_)) {
+    using enum btse_futures::json::OrderState::type_t;
+    case UNDEFINED_INTERNAL:
+      return roq::OrderStatus::UNDEFINED;
+    case UNKNOWN_INTERNAL:
+      return roq::OrderStatus::UNDEFINED;
+    case STATUS_ACTIVE:
+      return roq::OrderStatus::WORKING;
+    case STATUS_INACTIVE:
+      return roq::OrderStatus::SUSPENDED;
+  }
+  return {};
+}
+
+static_assert(Helper{btse_futures::json::OrderState{btse_futures::json::OrderState::UNDEFINED_INTERNAL}} == roq::OrderStatus::UNDEFINED);
+static_assert(Helper{btse_futures::json::OrderState{btse_futures::json::OrderState::STATUS_ACTIVE}} == roq::OrderStatus::WORKING);
+static_assert(Helper{btse_futures::json::OrderState{btse_futures::json::OrderState::STATUS_INACTIVE}} == roq::OrderStatus::SUSPENDED);
+
+template <>
+template <>
+std::optional<roq::OrderStatus> Map<btse_futures::json::OrderState>::helper() const {
+  return Helper{args_};
+}
+
 // btse_futures::json::OrderType => roq::OrderType
 
 template <>

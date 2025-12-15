@@ -277,6 +277,62 @@ void DropCopy::operator()(Trace<json::Notification> const &event) {
   auto &[trace_info, notification] = event;
   log::info<2>("notification={}"sv, notification);
   log::warn("DEBUG notification={}"sv, notification);
+  for (auto &item : notification.data) {
+    auto exchange_or_request_id = [&]() -> std::string_view {
+      if (std::empty(item.cl_order_id)) {
+        return item.order_id;
+      }
+      return item.cl_order_id;
+    }();
+    auto order_status = map(item.status).template get<OrderStatus>();
+    auto has_last_traded = std::isnan(item.filled_size) || utils::compare(item.filled_size, 0.0) == 0;
+    auto last_traded_quantity = has_last_traded ? item.filled_size : NaN;
+    auto last_traded_price = has_last_traded ? item.price : NaN;  // XXX wrong
+    auto last_liquidity = [&]() -> Liquidity {
+      if (has_last_traded) {
+        return item.maker ? Liquidity::MAKER : Liquidity::TAKER;
+      }
+      return {};
+    }();
+    auto order_update = server::oms::OrderUpdate{
+        .account = account_.name,
+        .exchange = shared_.settings.exchange,
+        .symbol = item.symbol,
+        .side = map(item.side),
+        .position_effect = {},
+        .margin_mode = {},
+        .max_show_quantity = NaN,
+        .order_type = map(item.order_type),
+        .time_in_force = map(item.time_in_force),
+        .execution_instructions = {},
+        .create_time_utc = {},
+        .update_time_utc = item.timestamp,
+        .external_account = {},
+        .external_order_id = item.order_id,
+        .client_order_id = item.cl_order_id,
+        .order_status = order_status,
+        .quantity = item.current_order_size,
+        .price = item.price,
+        .stop_price = NaN,
+        .leverage = NaN,
+        .remaining_quantity = item.remaining_size,
+        .traded_quantity = item.total_filled_size,
+        .average_traded_price = item.avg_filled_price,
+        .last_traded_quantity = last_traded_quantity,
+        .last_traded_price = last_traded_price,
+        .last_liquidity = last_liquidity,
+        .routing_id = {},
+        .max_request_version = {},
+        .max_response_version = {},
+        .max_accepted_version = {},
+        .update_type = UpdateType::INCREMENTAL,
+        .sending_time_utc = item.timestamp,
+    };
+    if (shared_.update_order(exchange_or_request_id, stream_id_, trace_info, order_update, [&]([[maybe_unused]] auto &order) {})) {
+    } else {
+      log::warn("*** EXTERNAL ORDER *** ({} / {})"sv, item.order_id, exchange_or_request_id);
+    }
+  }
 }
 
 void DropCopy::operator()(Trace<json::Fills> const &event) {

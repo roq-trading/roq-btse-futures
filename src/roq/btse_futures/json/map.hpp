@@ -10,6 +10,7 @@
 #include "roq/time_in_force.hpp"
 #include "roq/update_type.hpp"
 
+#include "roq/btse_futures/json/order_state.hpp"
 #include "roq/btse_futures/json/order_type.hpp"
 #include "roq/btse_futures/json/side.hpp"
 #include "roq/btse_futures/json/time_in_force.hpp"
@@ -22,6 +23,14 @@ namespace roq {
 template <>
 template <>
 std::optional<OrderStatus> Map<int32_t>::helper() const;
+
+template <>
+template <>
+std::optional<OrderType> Map<int32_t>::helper() const;
+
+template <>
+template <>
+std::optional<OrderStatus> Map<btse_futures::json::OrderState>::helper() const;
 
 template <>
 template <>
