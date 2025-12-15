@@ -107,30 +107,20 @@ std::string_view Encoder::cancel_order(
 }
 
 std::string_view Encoder::cancel_all_orders(
-    std::string &buffer, CancelAllOrders const &cancel_all_orders, [[maybe_unused]] std::string_view const &request_id, std::string_view const &category) {
+    std::string &buffer, CancelAllOrders const &cancel_all_orders, [[maybe_unused]] std::string_view const &request_id, std::string_view const &symbol) {
   buffer.clear();
-  fmt::format_to(
-      std::back_inserter(buffer),
-      R"({{)"
-      R"("category":"{}")"sv,
-      category);
-  if (!std::empty(cancel_all_orders.symbol)) {
-    fmt::format_to(std::back_inserter(buffer), R"(,"symbol":"{}")"sv, cancel_all_orders.symbol);
-  }
-  fmt::format_to(std::back_inserter(buffer), R"(}})"sv);
+  fmt::format_to(std::back_inserter(buffer), "?symbol={}"sv, symbol);
   return buffer;
 }
 
-std::string_view Encoder::countdown_cancel_all(std::string &buffer, std::chrono::seconds countdown) {
+std::string_view Encoder::cancel_all_after(std::string &buffer, std::chrono::milliseconds timeout) {
   buffer.clear();
-  int64_t count = countdown.count();
-  auto tmp = std::min<int64_t>(std::max<int64_t>(count, 5), 60);  // note! docs say allowed range is [5;60]
   fmt::format_to(
       std::back_inserter(buffer),
       R"({{)"
-      R"("countdown":"{}")"
+      R"("timeout":{})"
       R"(}})"sv,
-      tmp);
+      timeout.count());
   return buffer;
 }
 

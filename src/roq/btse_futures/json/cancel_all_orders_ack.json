@@ -1,22 +1,11 @@
 {
   "name": "roq/btse_futures/json/CancelAllOrdersAck",
-  "type": "dictionary",
+  "type": "array",
   "values": [
     {
-      "name": "code",
-      "type": "std/int32"
-    },
-    {
-      "name": "msg",
-      "type": "std/string_view"
-    },
-    {
-      "name": "requestTime",
-      "type": "std/milliseconds"
-    },
-    {
       "name": "data",
-      "type": "roq/btse_futures/json/CancelAllOrdersAckData"
+      "type": "roq/btse_futures/json/CancelAllOrdersAckItem",
+      "array": "std/span"
     }
   ]
 }

@@ -119,8 +119,8 @@ class OrderEntry final : public web::rest::Client::Handler {
 
   // cancel-all-orders
   void cancel_all_orders(Event<CancelAllOrders> const &, std::string_view const &request_id);
-  void cancel_all_orders_ack(Trace<web::rest::Response> const &, uint8_t user_id);
-  void operator()(Trace<json::CancelAllOrdersAck> const &, uint8_t user_id);
+  void cancel_all_orders_ack(Trace<web::rest::Response> const &, std::string_view const &request_id);
+  void operator()(Trace<json::CancelAllOrdersAck> const &, std::string_view const &request_id);
 
   // cancel-all-after
   void cancel_all_after();

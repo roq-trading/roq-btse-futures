@@ -7,8 +7,7 @@ include(RoqAutogen)
 set(AUTOGEN_SCHEMAS
     all_position_data_item.json
     all_position.json
-    cancel_all_orders_ack_data.json
-    cancel_all_orders_ack_data_list_item.json
+    cancel_all_orders_ack_item.json
     cancel_all_orders_ack.json
     cancel_order_ack_item.json
     cancel_order_ack.json

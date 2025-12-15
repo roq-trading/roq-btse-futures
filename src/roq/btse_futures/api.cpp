@@ -29,6 +29,7 @@ API API::create(Settings const &) {
           .create_order = "/api/v2.3/order"sv,
           .amend_order = "/api/v2.3/order"sv,
           .cancel_order = "/api/v2.3/order"sv,
+          .cancel_all_orders = "/api/v2.3/order"sv,
           .cancel_all_after = "/api/v2.3/order/cancelAllAfter"sv,
       },
   };

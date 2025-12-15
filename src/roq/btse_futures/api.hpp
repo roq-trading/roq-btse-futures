@@ -25,6 +25,7 @@ struct API final {
     std::string_view create_order;
     std::string_view amend_order;
     std::string_view cancel_order;
+    std::string_view cancel_all_orders;
     std::string_view cancel_all_after;
   } order_management;
 

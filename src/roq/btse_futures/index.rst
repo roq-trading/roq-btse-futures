@@ -97,16 +97,16 @@ Supports
       :align: left
 
       * - :cpp:class:`CreateOrder <roq::CreateOrder>`
-        - |negative-cross-mark|
+        - |check-mark|
         -
       * - :cpp:class:`ModifyOrder <roq::ModifyOrder>`
-        - |negative-cross-mark|
+        - |check-mark|
         -
       * - :cpp:class:`CancelOrder <roq::CancelOrder>`
-        - |negative-cross-mark|
+        - |check-mark|
         -
       * - :cpp:class:`CancelAllOrders <roq::CancelAllOrders>`
-        - |cross-mark|
+        - |check-mark|
         -
       * - :cpp:class:`MassQuote <roq::MassQuote>`
         - |cross-mark|
@@ -125,7 +125,7 @@ Supports
         - |cross-mark|
         -
       * - :cpp:class:`Position <roq::PositionUpdate>`
-        - |negative-cross-mark|
+        - |check-mark|
         -
 
 

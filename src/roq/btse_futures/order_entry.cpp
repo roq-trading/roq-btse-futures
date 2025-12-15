@@ -781,6 +781,7 @@ void OrderEntry::operator()(
   auto &[trace_info, place_order_ack] = event;
   log::info<2>("place_order_ack={}"sv, place_order_ack);
   log::warn("DEBUG place_order_ack={}"sv, place_order_ack);
+  // XXX FIXME TODO reject => response
 }
 
 // amend-order
@@ -852,6 +853,7 @@ void OrderEntry::operator()(
   auto &[trace_info, modify_order_ack] = event;
   log::info<2>("modify_order_ack={}"sv, modify_order_ack);
   log::warn("DEBUG modify_order_ack={}"sv, modify_order_ack);
+  // XXX FIXME TODO reject => response
 }
 
 // cancel-order
@@ -923,6 +925,7 @@ void OrderEntry::operator()(
   auto &[trace_info, cancel_order_ack] = event;
   log::info<2>("cancel_order_ack={}"sv, cancel_order_ack);
   log::warn("DEBUG cancel_order_ack={}"sv, cancel_order_ack);
+  // XXX FIXME TODO reject => response
 }
 
 // cancel-all-orders
@@ -933,33 +936,36 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
       throw server::oms::NotReady{"not ready"sv};
     }
     auto &[message_info, cancel_all_orders] = event;
-    /*
-    auto method = web::http::Method::POST;
-    auto path = shared_.api.order_management.cancel_all_orders;
-    auto query = fmt::format("?category={}"sv, shared_.api.category);
-    auto body = json::Encoder::cancel_all_orders(encode_buffer_, cancel_all_orders, request_id, shared_.api.category);
-    auto headers = account_.create_headers(method, path, query, body);
-    auto request = web::rest::Request{
-        .method = method,
-        .path = path,
-        .query = query,
-        .accept = web::http::Accept::APPLICATION_JSON,
-        .content_type = web::http::ContentType::APPLICATION_JSON,
-        .headers = headers,
-        .body = body,
-        .quality_of_service = {},
+    auto helper = [&](auto &symbol) {
+      auto path = shared_.api.order_management.cancel_all_orders;
+      auto query = json::Encoder::cancel_all_orders(encode_buffer_, cancel_all_orders, request_id, symbol);
+      log::warn(R"(DEBUG query="{}")"sv, query);
+      auto headers = account_.create_headers(path);
+      auto request = web::rest::Request{
+          .method = web::http::Method::DELETE,
+          .path = path,
+          .query = query,
+          .accept = web::http::Accept::APPLICATION_JSON,
+          .content_type = web::http::ContentType::APPLICATION_JSON,
+          .headers = headers,
+          .body = {},
+          .quality_of_service = {},
+      };
+      auto callback = [this](auto &request_id, auto &response) {
+        TraceInfo trace_info;
+        Trace event{trace_info, response};
+        cancel_all_orders_ack(event, request_id);
+      };
+      (*connection_)(request_id, request, callback);
     };
-    auto callback = [this, user_id = message_info.source]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      cancel_all_orders_ack(event, user_id);
-    };
-    (*connection_)(request_id, request, callback);
-    */
+    if (shared_.dispatcher.get_all_order_symbols(helper, account_.name)) {
+    } else {
+      log::warn("*** NOT POSSIBLE TO CANCEL ALL OPEN ORDERS (NO SYMBOLS) ***"sv);
+    }
   });
 }
 
-void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, [[maybe_unused]] uint8_t user_id) {
+void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, std::string_view const &request_id) {
   profile_.cancel_all_orders_ack([&]() {
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(DEBUG origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
@@ -987,21 +993,18 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
     };
     auto handle_success = [&](auto &body) {
       json::CancelAllOrdersAck cancel_all_orders_ack{body, decode_buffer_};
-      if (cancel_all_orders_ack.code == 0) {
-        Trace event_2{event, cancel_all_orders_ack};
-        (*this)(event_2, user_id);
-      } else {
-        handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(cancel_all_orders_ack.code), cancel_all_orders_ack.msg);
-      }
+      Trace event_2{event, cancel_all_orders_ack};
+      (*this)(event_2, request_id);
     };
     process_response(event, handle_error, handle_success);
   });
 }
 
-void OrderEntry::operator()(Trace<json::CancelAllOrdersAck> const &event, [[maybe_unused]] uint8_t user_id) {
+void OrderEntry::operator()(Trace<json::CancelAllOrdersAck> const &event, std::string_view const &request_id) {
   auto &[trace_info, cancel_all_orders_ack] = event;
   log::info<2>("cancel_all_orders_ack={}"sv, cancel_all_orders_ack);
   log::warn("DEBUG cancel_all_orders_ack={}"sv, cancel_all_orders_ack);
+  // XXX FIXME TODO reject => response
 }
 
 // cancel-all-after
@@ -1009,7 +1012,7 @@ void OrderEntry::operator()(Trace<json::CancelAllOrdersAck> const &event, [[mayb
 void OrderEntry::cancel_all_after() {
   profile_.countdown_cancel_all([&]() {
     auto path = shared_.api.order_management.cancel_all_after;
-    auto body = json::Encoder::countdown_cancel_all(encode_buffer_, std::chrono::duration_cast<std::chrono::seconds>(shared_.settings.rest.ping_freq));
+    auto body = json::Encoder::cancel_all_after(encode_buffer_, utils::safe_cast{shared_.settings.rest.ping_freq});
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
         .method = web::http::Method::POST,
@@ -1026,7 +1029,7 @@ void OrderEntry::cancel_all_after() {
       Trace event{trace_info, response};
       cancel_all_after_ack(event);
     };
-    (*connection_)("countdown_cancel_all"sv, request, callback);
+    (*connection_)("cancel-all-after"sv, request, callback);
   });
 }
 
@@ -1035,7 +1038,7 @@ void OrderEntry::cancel_all_after_ack(Trace<web::rest::Response> const &event) {
     auto &[trace_info, response] = event;
     auto [status, category, body] = response.result();
     if (status != web::http::Status::OK) {
-      log::warn(R"(DEBUG status={}, category={}, body="{}")"sv, status, category, body);
+      log::error("response={}"sv, response);
     }
   });
 }
