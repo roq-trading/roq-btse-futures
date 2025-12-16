@@ -38,6 +38,8 @@ auto const SUPPORTS = Mask{
 };
 
 size_t const MAX_DECODE_BUFFER_DEPTH = 2;
+
+int32_t STATUS_REJECTED = 8;
 }  // namespace
 
 // === HELPERS ===
@@ -769,8 +771,18 @@ void OrderEntry::create_order_ack(Trace<web::rest::Response> const &event, uint8
     auto handle_success = [&](auto &body) {
       log::warn("DEBUG {}"sv, body);
       json::PlaceOrderAck place_order_ack{body, decode_buffer_};
-      Trace event_2{event, place_order_ack};
-      (*this)(event_2, user_id, order_id, version);
+      size_t failed = 0;
+      for (auto &item : place_order_ack.data) {
+        if (item.status != STATUS_REJECTED) {
+          continue;
+        }
+        ++failed;
+        handle_error(Origin::GATEWAY, RequestStatus::REJECTED, Error::UNKNOWN, item.message);
+      }
+      if (failed < std::size(place_order_ack.data)) {
+        Trace event_2{event, place_order_ack};
+        (*this)(event_2, user_id, order_id, version);
+      }
     };
     process_response(event, handle_error, handle_success);
   });
@@ -841,8 +853,18 @@ void OrderEntry::amend_order_ack(Trace<web::rest::Response> const &event, uint8_
     auto handle_success = [&](auto &body) {
       log::warn("DEBUG {}"sv, body);
       json::ModifyOrderAck modify_order_ack{body, decode_buffer_};
-      Trace event_2{event, modify_order_ack};
-      (*this)(event_2, user_id, order_id, version);
+      size_t failed = 0;
+      for (auto &item : modify_order_ack.data) {
+        if (item.status != STATUS_REJECTED) {
+          continue;
+        }
+        ++failed;
+        handle_error(Origin::GATEWAY, RequestStatus::REJECTED, Error::UNKNOWN, item.message);
+      }
+      if (failed < std::size(modify_order_ack.data)) {
+        Trace event_2{event, modify_order_ack};
+        (*this)(event_2, user_id, order_id, version);
+      }
     };
     process_response(event, handle_error, handle_success);
   });
@@ -913,8 +935,18 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
     auto handle_success = [&](auto &body) {
       log::warn("DEBUG {}"sv, body);
       json::CancelOrderAck cancel_order_ack{body, decode_buffer_};
-      Trace event_2{event, cancel_order_ack};
-      (*this)(event_2, user_id, order_id, version);
+      size_t failed = 0;
+      for (auto &item : cancel_order_ack.data) {
+        if (item.status != STATUS_REJECTED) {
+          continue;
+        }
+        ++failed;
+        handle_error(Origin::GATEWAY, RequestStatus::REJECTED, Error::UNKNOWN, item.message);
+      }
+      if (failed < std::size(cancel_order_ack.data)) {
+        Trace event_2{event, cancel_order_ack};
+        (*this)(event_2, user_id, order_id, version);
+      }
     };
     process_response(event, handle_error, handle_success);
   });
