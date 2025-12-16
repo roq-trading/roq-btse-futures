@@ -84,9 +84,9 @@ struct create_metrics final : public utils::metrics::Factory {
 
 // === IMPLEMENTATION ===
 
-OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)}, connection_{create_connection(*this, shared.settings, context)},
-      decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
+OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_id, Account &account, Shared &shared, bool master)
+    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_, account)}, master_{master},
+      connection_{create_connection(*this, shared.settings, context)}, decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
       },
@@ -132,7 +132,7 @@ void OrderEntry::operator()(Event<Timer> const &event) {
   if (!ready()) {
     return;
   }
-  if (shared_.settings.rest.cancel_on_disconnect && next_heartbeat_ < now) {
+  if (master_ && shared_.settings.rest.cancel_on_disconnect && next_heartbeat_ < now) {
     next_heartbeat_ = now + (shared_.settings.rest.ping_freq / 3);
     cancel_all_after();
   }
