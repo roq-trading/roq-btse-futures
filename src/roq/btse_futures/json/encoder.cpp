@@ -107,7 +107,7 @@ std::string_view Encoder::cancel_order(
 }
 
 std::string_view Encoder::cancel_all_orders(
-    std::string &buffer, CancelAllOrders const &cancel_all_orders, [[maybe_unused]] std::string_view const &request_id, std::string_view const &symbol) {
+    std::string &buffer, CancelAllOrders const &, [[maybe_unused]] std::string_view const &request_id, std::string_view const &symbol) {
   buffer.clear();
   fmt::format_to(std::back_inserter(buffer), "?symbol={}"sv, symbol);
   return buffer;
