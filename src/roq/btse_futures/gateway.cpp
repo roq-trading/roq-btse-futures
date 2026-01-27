@@ -63,10 +63,10 @@ R create_drop_copy(auto &gateway, auto &context, auto &stream_id, auto &accounts
 // === IMPLEMENTATION ===
 
 Gateway::Gateway(server::Dispatcher &dispatcher, Settings const &settings, Config const &config, io::Context &context)
-    : dispatcher_(dispatcher), master_account_(config.get_master_account()), accounts_(create_accounts<decltype(accounts_)>(config)), context_(context),
-      shared_(dispatcher, settings), rest_(*this, context_, ++stream_id_, shared_),
-      order_entry_(create_order_entry<decltype(order_entry_)>(*this, context_, stream_id_, accounts_, shared_)),
-      drop_copy_(create_drop_copy<decltype(drop_copy_)>(*this, context_, stream_id_, accounts_, shared_)) {
+    : dispatcher_{dispatcher}, master_account_{config.get_master_account()}, accounts_{create_accounts<decltype(accounts_)>(config)}, context_{context},
+      shared_{dispatcher, settings}, rest_{*this, context_, ++stream_id_, shared_},
+      order_entry_{create_order_entry<decltype(order_entry_)>(*this, context_, stream_id_, accounts_, shared_)},
+      drop_copy_{create_drop_copy<decltype(drop_copy_)>(*this, context_, stream_id_, accounts_, shared_)} {
 }
 
 void Gateway::operator()(Event<Start> const &event) {
@@ -174,7 +174,20 @@ void Gateway::ensure_symbol_slices(size_t size) {
   }
 }
 
-void Gateway::operator()(Event<Subscribe> const &) {
+void Gateway::operator()(Event<Subscribe> const &event) {
+  auto &[message_info, subscribe] = event;
+  std::vector<Symbol> symbols;
+  for (auto &item : subscribe.symbols) {
+    if (shared_.all_symbols.emplace(item).second) {
+      symbols.emplace_back(item);
+    } else {
+      log::warn(R"(*** DUPLICATE SUBSCRIPTION *** (symbol="{}")"sv, item);
+    }
+  }
+  auto symbols_update = Rest::SymbolsUpdate{
+      .symbols = symbols,
+  };
+  (*this)(symbols_update);
 }
 
 uint16_t Gateway::operator()(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
