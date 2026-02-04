@@ -246,6 +246,7 @@ void Rest::operator()(Trace<json::GetMarketSummaryAck> const &event) {
         .symbol = item.symbol,
         .description = {},
         .security_type = {},  // time_based_contract ???
+        .external_security_id = {},
         .cfi_code = {},
         .base_currency = item.base,
         .quote_currency = item.quote,
