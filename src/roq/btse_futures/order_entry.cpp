@@ -550,6 +550,8 @@ void OrderEntry::operator()(Trace<json::GetOpenOrdersAck> const &event) {
         .external_order_id = item.order_id,
         .client_order_id = item.cl_order_id,
         .order_status = order_status,
+        .error = {},
+        .text = {},
         .quantity = item.current_order_size,
         .price = item.price,
         .stop_price = NaN,
