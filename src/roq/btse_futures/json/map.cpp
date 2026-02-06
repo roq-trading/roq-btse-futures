@@ -19,6 +19,8 @@ template <>
 template <>
 constexpr Helper<int32_t>::operator std::optional<roq::OrderStatus>() const {
   switch (std::get<0>(args_)) {
+    case 0:  // UNDOC
+      return roq::OrderStatus::UNDEFINED;
     case 1:  //  MARKET_UNAVAILABLE = Futures market is unavailable
       return roq::OrderStatus::UNDEFINED;
     case 2:  //  ORDER_INSERTED = Order is inserted successfully
@@ -147,6 +149,8 @@ template <>
 template <>
 constexpr Helper<int32_t>::operator std::optional<roq::OrderType>() const {
   switch (std::get<0>(args_)) {
+    case 0:  // UNDOC
+      return roq::OrderType::UNDEFINED;
     case 76:  //  Limit Order
       return roq::OrderType::LIMIT;
     case 77:  //  Market Order

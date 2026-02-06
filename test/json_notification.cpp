@@ -4,6 +4,8 @@
 
 #include "parser_tester.hpp"
 
+#include "roq/btse_futures/json/map.hpp"
+
 using namespace roq;
 using namespace roq::btse_futures;
 
@@ -276,3 +278,46 @@ TEST_CASE("filled_maker", "[json_notification]") {
   };
   ParserTester<value_type>::dispatch(helper, message, 8192, 1);
 }
+
+TEST_CASE("issue_20260205", "[json_notification]") {
+  auto message = R"({)"
+                 R"("topic":"notificationApiV4",)"
+                 R"("data":[{)"
+                 R"("symbol":"SOL-PERP",)"
+                 R"("orderID":"9599e536-252c-4e40-97c8-320440682bae",)"
+                 R"("side":"",)"
+                 R"("orderType":0,)"
+                 R"("type":0,)"
+                 R"("price":0,)"
+                 R"("triggerPrice":0,)"
+                 R"("pegPriceDeviation":1,)"
+                 R"("stealth":1,)"
+                 R"("status":8,)"
+                 R"("timestamp":1770329155384,)"
+                 R"("avgFilledPrice":0,)"
+                 R"("clOrderID":"ogABDRAOplAAAQAAAAAA",)"
+                 R"("postOnly":false,)"
+                 R"("maker":false,)"
+                 R"("positionId":null,)"
+                 R"("orderDetailType":null,)"
+                 R"("orderUserInitiated":false,)"
+                 R"("originalOrderSize":0,)"
+                 R"("currentOrderSize":0,)"
+                 R"("filledSize":0,)"
+                 R"("totalFilledSize":0,)"
+                 R"("remainingSize":0,)"
+                 R"("time_in_force":"GTC")"
+                 R"(})"
+                 R"(])"
+                 R"(})";
+  auto helper = [](value_type const &obj) {
+    CHECK(obj.topic == "notificationApiV4"sv);
+    REQUIRE(std::size(obj.data) == 1);
+    auto &d0 = obj.data[0];
+    // HERE
+    auto order_type = map(d0.order_type).template get<OrderType>();
+    CHECK(order_type == OrderType::UNDEFINED);
+  };
+  ParserTester<value_type>::dispatch(helper, message, 8192, 1);
+}
+

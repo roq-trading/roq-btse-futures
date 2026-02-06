@@ -24,5 +24,4 @@ $PREFIX ./roq-btse-futures \
   --event_log_dir "$HOME/var/lib/roq/data" \
   --client_listen_address "$HOME/run/$NAME.sock" \
   --service_listen_address "$HOME/run/metrics/${NAME}.sock" \
-  --cache_all_reference_data=true \
   $@
