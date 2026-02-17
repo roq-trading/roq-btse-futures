@@ -320,4 +320,3 @@ TEST_CASE("issue_20260205", "[json_notification]") {
   };
   ParserTester<value_type>::dispatch(helper, message, 8192, 1);
 }
-

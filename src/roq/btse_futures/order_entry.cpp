@@ -170,28 +170,28 @@ void OrderEntry::operator()(metrics::Writer &writer) const {
 }
 
 uint16_t OrderEntry::operator()(
-    Event<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &, std::string_view const &request_id) {
-  create_order(event, order, request_id);
+    Event<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &ref_data, std::string_view const &request_id) {
+  create_order(event, order, ref_data, request_id);
   return stream_id_;
 }
 
 uint16_t OrderEntry::operator()(
     Event<ModifyOrder> const &event,
     server::oms::Order const &order,
-    server::oms::RefData const &,
+    server::oms::RefData const &ref_data,
     std::string_view const &request_id,
     std::string_view const &previous_request_id) {
-  amend_order(event, order, request_id, previous_request_id);
+  amend_order(event, order, ref_data, request_id, previous_request_id);
   return stream_id_;
 }
 
 uint16_t OrderEntry::operator()(
     Event<CancelOrder> const &event,
     server::oms::Order const &order,
-    server::oms::RefData const &,
+    server::oms::RefData const &ref_data,
     std::string_view const &request_id,
     std::string_view const &previous_request_id) {
-  cancel_order(event, order, request_id, previous_request_id);
+  cancel_order(event, order, ref_data, request_id, previous_request_id);
   return stream_id_;
 }
 
@@ -731,14 +731,15 @@ void OrderEntry::operator()(Trace<json::FillHistory> const &event) {
 */
 // create-order
 
-void OrderEntry::create_order(Event<CreateOrder> const &event, server::oms::Order const &order, std::string_view const &request_id) {
+void OrderEntry::create_order(
+    Event<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &ref_data, std::string_view const &request_id) {
   profile_.place_order([&]() {
     if (!ready()) {
       throw server::oms::NotReady{"not ready"sv};
     }
     auto &[message_info, create_order] = event;
     auto path = shared_.api.order_management.create_order;
-    auto body = json::Encoder::place_order(encode_buffer_, create_order, order, request_id);
+    auto body = json::Encoder::place_order(encode_buffer_, create_order, order, ref_data, request_id);
     log::warn(R"(DEBUG body="{}")"sv, body);
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
@@ -813,6 +814,7 @@ void OrderEntry::operator()(
 void OrderEntry::amend_order(
     Event<ModifyOrder> const &event,
     server::oms::Order const &order,
+    server::oms::RefData const &ref_data,
     std::string_view const &request_id,
     [[maybe_unused]] std::string_view const &previous_request_id) {
   profile_.modify_order([&]() {
@@ -821,7 +823,7 @@ void OrderEntry::amend_order(
     }
     auto &[message_info, modify_order] = event;
     auto path = shared_.api.order_management.amend_order;
-    auto body = json::Encoder::modify_order(encode_buffer_, modify_order, order, request_id);
+    auto body = json::Encoder::modify_order(encode_buffer_, modify_order, order, ref_data, request_id);
     log::warn(R"(DEBUG body="{}")"sv, body);
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
@@ -896,6 +898,7 @@ void OrderEntry::operator()(
 void OrderEntry::cancel_order(
     Event<CancelOrder> const &event,
     server::oms::Order const &order,
+    server::oms::RefData const &ref_data,
     std::string_view const &request_id,
     [[maybe_unused]] std::string_view const &previous_request_id) {
   profile_.cancel_order([&]() {
@@ -904,7 +907,7 @@ void OrderEntry::cancel_order(
     }
     auto &[message_info, cancel_order] = event;
     auto path = shared_.api.order_management.cancel_order;
-    auto query = json::Encoder::cancel_order(encode_buffer_, cancel_order, order, request_id);
+    auto query = json::Encoder::cancel_order(encode_buffer_, cancel_order, order, ref_data, request_id);
     log::warn(R"(DEBUG query="{}")"sv, query);
     auto headers = account_.create_headers(path);
     auto request = web::rest::Request{
