@@ -42,7 +42,7 @@ class OrderBook final : public web::socket::Client::Handler, public json::Parser
 
   uint16_t stream_id() const { return stream_id_; }
 
-  bool ready() const { return status_ == ConnectionStatus::READY; }
+  bool ready() const { return connection_status_ == ConnectionStatus::READY; }
 
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
@@ -64,7 +64,7 @@ class OrderBook final : public web::socket::Client::Handler, public json::Parser
   void operator()(web::socket::Client::Binary const &) override;
 
  private:
-  void operator()(ConnectionStatus);
+  void operator()(ConnectionStatus, std::string_view const &reason = {});
 
   void ping(std::chrono::nanoseconds now);
 
@@ -113,7 +113,7 @@ class OrderBook final : public web::socket::Client::Handler, public json::Parser
   // cache
   Shared &shared_;
   // state
-  ConnectionStatus status_ = {};
+  ConnectionStatus connection_status_ = {};
   std::chrono::nanoseconds next_ping_ = {};
 };
 
