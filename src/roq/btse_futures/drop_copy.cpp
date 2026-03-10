@@ -191,7 +191,6 @@ void DropCopy::operator()(ConnectionStatus connection_status, std::string_view c
 
 void DropCopy::login() {
   auto message = account_.create_ws_login("/ws/futures"sv);
-  log::warn("DEBUG message={}"sv, message);
   (*connection_).send_text(message);
 }
 
@@ -323,7 +322,6 @@ void DropCopy::operator()(Trace<json::AllPosition> const &event) {
 void DropCopy::operator()(Trace<json::Notification> const &event) {
   auto &[trace_info, notification] = event;
   log::info<2>("notification={}"sv, notification);
-  log::warn("DEBUG notification={}"sv, notification);
   for (auto &item : notification.data) {
     auto exchange_or_request_id = [&]() -> std::string_view {
       if (std::empty(item.cl_order_id)) {

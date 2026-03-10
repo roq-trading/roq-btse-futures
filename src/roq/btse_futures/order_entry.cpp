@@ -429,7 +429,6 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
       download_.retry(state);
     };
     auto handle_success = [&](auto &body) {
-      log::warn("DEBUG {}"sv, body);
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
@@ -527,7 +526,6 @@ void OrderEntry::get_open_orders_ack(Trace<web::rest::Response> const &event, ui
       download_.retry(state);
     };
     auto handle_success = [&](auto &body) {
-      log::warn("DEBUG {}"sv, body);
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
@@ -744,7 +742,6 @@ void OrderEntry::create_order(
     auto &[message_info, create_order] = event;
     auto path = shared_.api.order_management.create_order;
     auto body = json::Encoder::place_order(encode_buffer_, create_order, order, ref_data, request_id);
-    log::warn(R"(DEBUG body="{}")"sv, body);
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
         .method = web::http::Method::POST,
@@ -786,7 +783,6 @@ void OrderEntry::create_order_ack(Trace<web::rest::Response> const &event, uint8
       (*this)(event_2, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
-      log::warn("DEBUG {}"sv, body);
       json::PlaceOrderAck place_order_ack{body, decode_buffer_};
       size_t failed = 0;
       for (auto &item : place_order_ack.data) {
@@ -809,7 +805,6 @@ void OrderEntry::operator()(
     Trace<json::PlaceOrderAck> const &event, [[maybe_unused]] uint8_t user_id, [[maybe_unused]] uint64_t order_id, [[maybe_unused]] uint32_t version) {
   auto &[trace_info, place_order_ack] = event;
   log::info<2>("place_order_ack={}"sv, place_order_ack);
-  log::warn("DEBUG place_order_ack={}"sv, place_order_ack);
   // XXX FIXME TODO reject => response
 }
 
@@ -828,7 +823,6 @@ void OrderEntry::amend_order(
     auto &[message_info, modify_order] = event;
     auto path = shared_.api.order_management.amend_order;
     auto body = json::Encoder::modify_order(encode_buffer_, modify_order, order, ref_data, request_id);
-    log::warn(R"(DEBUG body="{}")"sv, body);
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
         .method = web::http::Method::PUT,
@@ -870,7 +864,6 @@ void OrderEntry::amend_order_ack(Trace<web::rest::Response> const &event, uint8_
       (*this)(event_2, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
-      log::warn("DEBUG {}"sv, body);
       json::ModifyOrderAck modify_order_ack{body, decode_buffer_};
       size_t failed = 0;
       for (auto &item : modify_order_ack.data) {
@@ -893,7 +886,6 @@ void OrderEntry::operator()(
     Trace<json::ModifyOrderAck> const &event, [[maybe_unused]] uint8_t user_id, [[maybe_unused]] uint64_t order_id, [[maybe_unused]] uint32_t version) {
   auto &[trace_info, modify_order_ack] = event;
   log::info<2>("modify_order_ack={}"sv, modify_order_ack);
-  log::warn("DEBUG modify_order_ack={}"sv, modify_order_ack);
   // XXX FIXME TODO reject => response
 }
 
@@ -912,7 +904,6 @@ void OrderEntry::cancel_order(
     auto &[message_info, cancel_order] = event;
     auto path = shared_.api.order_management.cancel_order;
     auto query = json::Encoder::cancel_order(encode_buffer_, cancel_order, order, ref_data, request_id);
-    log::warn(R"(DEBUG query="{}")"sv, query);
     auto headers = account_.create_headers(path);
     auto request = web::rest::Request{
         .method = web::http::Method::DELETE,
@@ -954,7 +945,6 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
       (*this)(event_2, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
-      log::warn("DEBUG {}"sv, body);
       json::CancelOrderAck cancel_order_ack{body, decode_buffer_};
       size_t failed = 0;
       for (auto &item : cancel_order_ack.data) {
@@ -977,7 +967,6 @@ void OrderEntry::operator()(
     Trace<json::CancelOrderAck> const &event, [[maybe_unused]] uint8_t user_id, [[maybe_unused]] uint64_t order_id, [[maybe_unused]] uint32_t version) {
   auto &[trace_info, cancel_order_ack] = event;
   log::info<2>("cancel_order_ack={}"sv, cancel_order_ack);
-  log::warn("DEBUG cancel_order_ack={}"sv, cancel_order_ack);
   // XXX FIXME TODO reject => response
 }
 
@@ -992,7 +981,6 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
     auto helper = [&](auto &symbol) {
       auto path = shared_.api.order_management.cancel_all_orders;
       auto query = json::Encoder::cancel_all_orders(encode_buffer_, cancel_all_orders, request_id, symbol);
-      log::warn(R"(DEBUG query="{}")"sv, query);
       auto headers = account_.create_headers(path);
       auto request = web::rest::Request{
           .method = web::http::Method::DELETE,
@@ -1056,7 +1044,6 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
 void OrderEntry::operator()(Trace<json::CancelAllOrdersAck> const &event, [[maybe_unused]] std::string_view const &request_id) {
   auto &[trace_info, cancel_all_orders_ack] = event;
   log::info<2>("cancel_all_orders_ack={}"sv, cancel_all_orders_ack);
-  log::warn("DEBUG cancel_all_orders_ack={}"sv, cancel_all_orders_ack);
   // XXX FIXME TODO reject => response
 }
 
@@ -1113,7 +1100,7 @@ void OrderEntry::process_response(web::rest::Response const &response, auto erro
       case REDIRECTION:
         log::fatal("Unexpected: URL is being redirected"sv);
       case CLIENT_ERROR:
-        log::warn("{}"sv, body);
+        log::warn("DEBUG {}"sv, body);
         switch (status) {
           using enum web::http::Status;
           case FORBIDDEN:            // 403
