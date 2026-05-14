@@ -21,7 +21,6 @@
 #include "roq/server.hpp"
 
 #include "roq/btse_futures/account.hpp"
-#include "roq/btse_futures/rest_state.hpp"
 #include "roq/btse_futures/shared.hpp"
 
 #include "roq/btse_futures/json/get_market_summary_ack.hpp"
@@ -65,7 +64,13 @@ class Rest final : public web::rest::Client::Handler {
 
   void operator()(ConnectionStatus, std::string_view const &reason = {});
 
-  uint32_t download(RestState);
+  enum class State {
+    UNDEFINED = 0,
+    MARKET_SUMMARY,
+    DONE,
+  };
+
+  uint32_t download(State);
 
   // market-summary
 
@@ -98,7 +103,7 @@ class Rest final : public web::rest::Client::Handler {
   Shared &shared_;
   // state
   ConnectionStatus connection_status_ = {};
-  core::Download<RestState> download_;
+  core::Download<State> download_;
 };
 
 }  // namespace btse_futures

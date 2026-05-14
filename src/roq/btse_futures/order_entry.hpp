@@ -21,7 +21,6 @@
 #include "roq/server.hpp"
 
 #include "roq/btse_futures/account.hpp"
-#include "roq/btse_futures/order_entry_state.hpp"
 #include "roq/btse_futures/shared.hpp"
 
 #include "roq/btse_futures/json/get_open_orders_ack.hpp"
@@ -84,7 +83,17 @@ class OrderEntry final : public web::rest::Client::Handler {
 
   void operator()(ConnectionStatus, std::string_view const &reason = {});
 
-  uint32_t download(OrderEntryState state);
+  enum class State {
+    UNDEFINED = 0,
+    POSITION_MODE,
+    WALLET,
+    POSITIONS,
+    OPEN_ORDERS,
+    FILL_HISTORY,
+    DONE,
+  };
+
+  uint32_t download(State);
 
   // position-mode
   void get_position_mode();
@@ -192,7 +201,7 @@ class OrderEntry final : public web::rest::Client::Handler {
   Shared &shared_;
   // state
   ConnectionStatus connection_status_ = {};
-  core::Download<OrderEntryState> download_;
+  core::Download<State> download_;
   //
   std::string encode_buffer_;
   std::chrono::nanoseconds next_heartbeat_ = {};

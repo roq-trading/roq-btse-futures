@@ -166,9 +166,9 @@ void Rest::operator()(Trace<web::rest::Client::Latency> const &event) {
   latency_.ping.update(latency.sample);
 }
 
-uint32_t Rest::download(RestState state) {
+uint32_t Rest::download(State state) {
   switch (state) {
-    using enum RestState;
+    using enum State;
     case UNDEFINED:
       assert(false);
       break;
@@ -208,7 +208,7 @@ void Rest::get_market_summary() {
 }
 
 void Rest::get_market_summary_ack(Trace<web::rest::Response> const &event, uint32_t sequence) {
-  auto const state = RestState::MARKET_SUMMARY;
+  auto const state = State::MARKET_SUMMARY;
   profile_.market_summary_ack([&]() {
     auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
