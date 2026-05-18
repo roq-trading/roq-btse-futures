@@ -13,13 +13,14 @@
 
 #include "roq/btse_futures/account.hpp"
 #include "roq/btse_futures/config.hpp"
+#include "roq/btse_futures/settings.hpp"
+#include "roq/btse_futures/shared.hpp"
+
 #include "roq/btse_futures/drop_copy.hpp"
 #include "roq/btse_futures/market_data.hpp"
 #include "roq/btse_futures/order_book.hpp"
 #include "roq/btse_futures/order_entry.hpp"
 #include "roq/btse_futures/rest.hpp"
-#include "roq/btse_futures/settings.hpp"
-#include "roq/btse_futures/shared.hpp"
 
 namespace roq {
 namespace btse_futures {
@@ -37,7 +38,7 @@ class Gateway final : public server::Handler,
 
  protected:
   // server::Handler
-  //
+
   void operator()(Event<Start> const &) override;
   void operator()(Event<Stop> const &) override;
   void operator()(Event<Timer> const &) override;
