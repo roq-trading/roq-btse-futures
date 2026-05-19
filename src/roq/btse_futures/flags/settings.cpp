@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/btse_futures/settings.hpp"
+#include "roq/btse_futures/flags/settings.hpp"
 
 #include "roq/logging.hpp"
 
@@ -8,6 +8,7 @@ using namespace std::literals;
 
 namespace roq {
 namespace btse_futures {
+namespace flags {
 
 Settings::Settings(args::Parser const &args)
     : server::flags::Settings{args, ROQ_PACKAGE_NAME, ROQ_BUILD_NUMBER}, flags::Flags{flags::Flags::create()}, misc{flags::Misc::create()},
@@ -15,5 +16,6 @@ Settings::Settings(args::Parser const &args)
   log::info("settings={}"sv, *this);
 }
 
+}  // namespace flags
 }  // namespace btse_futures
 }  // namespace roq

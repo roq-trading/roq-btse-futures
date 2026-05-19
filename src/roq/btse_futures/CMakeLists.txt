@@ -13,7 +13,6 @@ set(SOURCES
     order_book.cpp
     order_entry.cpp
     rest.cpp
-    settings.cpp
     shared.cpp
     main.cpp)
 
@@ -41,7 +40,6 @@ target_link_libraries(
           roq-logging::roq-logging
           roq-logging::roq-logging-flags
           roq-server::roq-server
-          roq-server::roq-server-flags
           roq-utils::roq-utils
           roq-web::roq-web
           fmt::fmt
