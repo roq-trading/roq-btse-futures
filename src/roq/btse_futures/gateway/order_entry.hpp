@@ -20,8 +20,8 @@
 
 #include "roq/server.hpp"
 
-#include "roq/btse_futures/account.hpp"
-#include "roq/btse_futures/shared.hpp"
+#include "roq/btse_futures/gateway/account.hpp"
+#include "roq/btse_futures/gateway/shared.hpp"
 
 #include "roq/btse_futures/json/get_open_orders_ack.hpp"
 #include "roq/btse_futures/json/get_position_mode_ack.hpp"
@@ -35,9 +35,9 @@
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
-class OrderEntry final : public web::rest::Client::Handler {
- public:
+struct OrderEntry final : public web::rest::Client::Handler {
   struct Handler {
     virtual void operator()(Trace<StreamStatus> const &) = 0;
     virtual void operator()(Trace<ExternalLatency> const &) = 0;
@@ -207,5 +207,6 @@ class OrderEntry final : public web::rest::Client::Handler {
   std::chrono::nanoseconds next_heartbeat_ = {};
 };
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq

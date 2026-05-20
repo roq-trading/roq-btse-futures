@@ -6,8 +6,10 @@
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
 using Settings = flags::Settings;
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq

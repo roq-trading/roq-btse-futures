@@ -7,15 +7,15 @@
 
 #include "roq/web/http/method.hpp"
 
-#include "roq/btse_futures/config.hpp"
+#include "roq/btse_futures/gateway/config.hpp"
 
 #include "roq/btse_futures/tools/crypto.hpp"
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
-class Account final {
- public:
+struct Account final {
   Account(Config const &, std::string_view const &name);
 
   Account(Account const &) = delete;
@@ -32,5 +32,6 @@ class Account final {
   tools::Crypto crypto_;
 };
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq

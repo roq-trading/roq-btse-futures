@@ -20,16 +20,16 @@
 
 #include "roq/server.hpp"
 
-#include "roq/btse_futures/account.hpp"
-#include "roq/btse_futures/shared.hpp"
+#include "roq/btse_futures/gateway/account.hpp"
+#include "roq/btse_futures/gateway/shared.hpp"
 
 #include "roq/btse_futures/json/get_market_summary_ack.hpp"
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
-class Rest final : public web::rest::Client::Handler {
- public:
+struct Rest final : public web::rest::Client::Handler {
   struct SymbolsUpdate final {
     std::span<Symbol const> symbols;
   };
@@ -106,5 +106,6 @@ class Rest final : public web::rest::Client::Handler {
   core::Download<State> download_;
 };
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq

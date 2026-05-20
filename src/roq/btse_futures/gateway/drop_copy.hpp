@@ -2,11 +2,8 @@
 
 #pragma once
 
-#include <deque>
 #include <string>
 #include <string_view>
-#include <utility>
-#include <vector>
 
 #include "roq/utils/metrics/counter.hpp"
 #include "roq/utils/metrics/latency.hpp"
@@ -16,40 +13,41 @@
 
 #include "roq/web/socket/client.hpp"
 
+#include "roq/core/download.hpp"
+
 #include "roq/core/json/buffer_stack.hpp"
 
 #include "roq/server.hpp"
 
-#include "roq/btse_futures/shared.hpp"
+#include "roq/btse_futures/gateway/account.hpp"
+#include "roq/btse_futures/gateway/shared.hpp"
 
 #include "roq/btse_futures/json/parser.hpp"
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
-class MarketData final : public web::socket::Client::Handler, public json::Parser::Handler {
- public:
+struct DropCopy final : public web::socket::Client::Handler, json::Parser::Handler {
   struct Handler {
     virtual void operator()(Trace<StreamStatus> const &) = 0;
     virtual void operator()(Trace<ExternalLatency> const &) = 0;
-    virtual void operator()(Trace<TradeSummary> const &, bool is_last) = 0;
+    virtual void operator()(Trace<TradeUpdate> const &, bool is_last, uint8_t user_id, std::string_view const &request_id) = 0;
+    virtual void operator()(Trace<FundsUpdate> const &, bool is_last) = 0;
+    virtual void operator()(Trace<PositionUpdate> const &, bool is_last) = 0;
   };
 
-  MarketData(Handler &, io::Context &, uint16_t stream_id, Shared &, size_t index);
+  DropCopy(Handler &, io::Context &, uint16_t stream_id, Account &, Shared &);
 
-  MarketData(MarketData const &) = delete;
+  DropCopy(DropCopy const &) = delete;
 
-  uint16_t stream_id() const { return stream_id_; }
-
-  bool ready() const { return connection_status_ == ConnectionStatus::READY; }
+  bool ready() const;
 
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
   void operator()(Event<Timer> const &);
 
   void operator()(metrics::Writer &) const;
-
-  void subscribe(size_t start_from = 0);
 
  protected:
   // web::socket::Client::Handler
@@ -61,16 +59,6 @@ class MarketData final : public web::socket::Client::Handler, public json::Parse
   void operator()(web::socket::Client::Latency const &) override;
   void operator()(web::socket::Client::Text const &) override;
   void operator()(web::socket::Client::Binary const &) override;
-
- private:
-  void operator()(ConnectionStatus, std::string_view const &reason = {});
-
-  void ping(std::chrono::nanoseconds now);
-
-  void subscribe(std::span<Symbol const> const &symbols);
-  void subscribe(std::span<Symbol const> const &symbols, std::string_view const &channel);
-
-  void parse(std::string_view const &message);
 
   // json::Parser::Handler
 
@@ -89,11 +77,21 @@ class MarketData final : public web::socket::Client::Handler, public json::Parse
   void operator()(Trace<json::Fills> const &) override;
 
  private:
+  void operator()(ConnectionStatus, std::string_view const &reason = {});
+
+  void login();
+
+  void subscribe();
+
+  void subscribe(std::string_view const &topic);
+
+  void parse(std::string_view const &message);
+
+ private:
   Handler &handler_;
   // config
   uint16_t const stream_id_;
   std::string const name_;
-  size_t const index_;
   // web socket
   std::unique_ptr<web::socket::Client> connection_;
   // buffers
@@ -103,17 +101,22 @@ class MarketData final : public web::socket::Client::Handler, public json::Parse
     utils::metrics::Counter disconnect;
   } counter_;
   struct {
-    utils::metrics::Profile parse, trade_history;
+    utils::metrics::Profile parse;
   } profile_;
   struct {
-    utils::metrics::Latency ping;
+    utils::metrics::Latency ping, heartbeat;
   } latency_;
+  // account
+  Account &account_;
   // cache
   Shared &shared_;
   // state
+  bool ready_ = false;
   ConnectionStatus connection_status_ = {};
+  std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};
 };
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq

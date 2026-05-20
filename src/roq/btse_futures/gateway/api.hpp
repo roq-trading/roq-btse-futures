@@ -4,10 +4,11 @@
 
 #include <string_view>
 
-#include "roq/btse_futures/settings.hpp"
+#include "roq/btse_futures/gateway/settings.hpp"
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
 struct API final {
   struct {
@@ -33,5 +34,6 @@ struct API final {
   static API create(Settings const &);
 };
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq

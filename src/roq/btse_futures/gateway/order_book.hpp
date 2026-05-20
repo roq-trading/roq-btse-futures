@@ -20,15 +20,15 @@
 
 #include "roq/server.hpp"
 
-#include "roq/btse_futures/shared.hpp"
+#include "roq/btse_futures/gateway/shared.hpp"
 
 #include "roq/btse_futures/json/parser.hpp"
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
-class OrderBook final : public web::socket::Client::Handler, public json::Parser::Handler {
- public:
+struct OrderBook final : public web::socket::Client::Handler, public json::Parser::Handler {
   struct Handler {
     virtual void operator()(Trace<StreamStatus> const &) = 0;
     virtual void operator()(Trace<ExternalLatency> const &) = 0;
@@ -117,5 +117,6 @@ class OrderBook final : public web::socket::Client::Handler, public json::Parser
   std::chrono::nanoseconds next_ping_ = {};
 };
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq

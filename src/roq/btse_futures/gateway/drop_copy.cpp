@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/btse_futures/drop_copy.hpp"
+#include "roq/btse_futures/gateway/drop_copy.hpp"
 
 #include "roq/mask.hpp"
 
@@ -18,6 +18,7 @@ using namespace std::literals;
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
 // === CONSTANTS ===
 
@@ -432,5 +433,6 @@ void DropCopy::operator()(Trace<json::Fills> const &event) {
   }
 }
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq

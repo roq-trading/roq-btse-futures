@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/btse_futures/market_data.hpp"
+#include "roq/btse_futures/gateway/market_data.hpp"
 
 #include "roq/logging.hpp"
 
@@ -18,6 +18,7 @@ using namespace std::literals;
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
 // === CONSTANTS ===
 
@@ -307,5 +308,6 @@ void MarketData::operator()(Trace<json::Fills> const &) {
   log::fatal("Unexpected"sv);
 }
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq

@@ -1,11 +1,12 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/btse_futures/account.hpp"
+#include "roq/btse_futures/gateway/account.hpp"
 
 #include "roq/clock.hpp"
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
 // === IMPLEMENTATION ===
 
@@ -23,5 +24,6 @@ std::string Account::create_headers(std::string_view const &path, std::string_vi
   return crypto_.create_headers(path, now_utc, body);
 }
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq

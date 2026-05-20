@@ -1,6 +1,6 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/btse_futures/order_entry.hpp"
+#include "roq/btse_futures/gateway/order_entry.hpp"
 
 #include <utility>
 
@@ -22,6 +22,7 @@ using namespace std::literals;
 
 namespace roq {
 namespace btse_futures {
+namespace gateway {
 
 // === CONSTANTS ===
 
@@ -1158,5 +1159,6 @@ void OrderEntry::operator()(Trace<server::oms::OrderUpdate> const &event, std::s
   }
 }
 
+}  // namespace gateway
 }  // namespace btse_futures
 }  // namespace roq
