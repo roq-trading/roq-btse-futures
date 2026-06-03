@@ -254,6 +254,10 @@
     {
       "name": "settleWithNonUSDAsset",
       "type": "std/string_view"
+    },
+    {
+      "name": "estimatedLossMargin",
+      "type": "std/double"
     }
   ]
 }
