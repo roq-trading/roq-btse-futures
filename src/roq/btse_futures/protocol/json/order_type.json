@@ -1,0 +1,15 @@
+{
+  "name": "roq/btse_futures/protocol/json/OrderType",
+  "type": "enum",
+  "values": [
+    {
+      "name": "MARKET"
+    },
+    {
+      "name": "LIMIT"
+    },
+    {
+      "name": "OCO"
+    }
+  ]
+}

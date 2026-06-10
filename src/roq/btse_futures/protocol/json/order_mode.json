@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/protocol/json/OrderMode",
+  "type": "enum",
+  "values": [
+    {
+      "name": "MODE_BUY"
+    },
+    {
+      "name": "MODE_SELL"
+    }
+  ]
+}

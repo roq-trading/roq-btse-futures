@@ -1,0 +1,263 @@
+{
+  "name": "roq/btse_futures/protocol/json/PositionsDataItem",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "requestId",
+      "type": "std/int64"
+    },
+    {
+      "name": "username",
+      "type": "std/string_view"
+    },
+    {
+      "name": "userCurrency",
+      "type": "std/string_view"
+    },
+    {
+      "name": "marketName",
+      "type": "std/string_view"
+    },
+    {
+      "name": "orderType",
+      "type": "std/int32"
+    },
+    {
+      "name": "orderMode",
+      "type": "std/int32"
+    },
+    {
+      "name": "status",
+      "type": "std/int32"
+    },
+    {
+      "name": "originalAmount",
+      "type": "std/double"
+    },
+    {
+      "name": "maxPriceHeld",
+      "type": "std/double"
+    },
+    {
+      "name": "pegPriceMin",
+      "type": "std/double"
+    },
+    {
+      "name": "stealth",
+      "type": "std/double"
+    },
+    {
+      "name": "baseCurrency",
+      "type": "std/string_view"
+    },
+    {
+      "name": "quoteCurrency",
+      "type": "std/string_view"
+    },
+    {
+      "name": "quoteCurrencyFiat",
+      "type": "std/bool"
+    },
+    {
+      "name": "parents"
+    },
+    {
+      "name": "makerFeesRatio"
+    },
+    {
+      "name": "takerFeesRatio"
+    },
+    {
+      "name": "orderID",
+      "type": "std/string_view"
+    },
+    {
+      "name": "vendorName",
+      "type": "std/string_view"
+    },
+    {
+      "name": "botID",
+      "type": "std/string_view"
+    },
+    {
+      "name": "maxStealthDisplayAmount",
+      "type": "std/double"
+    },
+    {
+      "name": "tag",
+      "type": "std/string_view"
+    },
+    {
+      "name": "triggerPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "closeOrder",
+      "type": "std/bool"
+    },
+    {
+      "name": "dbBaseBalHeld",
+      "type": "std/double"
+    },
+    {
+      "name": "dbQuoteBalHeld",
+      "type": "std/double"
+    },
+    {
+      "name": "isFuture",
+      "type": "std/bool"
+    },
+    {
+      "name": "liquidationInProgress",
+      "type": "std/bool"
+    },
+    {
+      "name": "marginType",
+      "type": "std/int32"
+    },
+    {
+      "name": "entryPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "liquidationPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "markedPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "marginHeld",
+      "type": "std/double"
+    },
+    {
+      "name": "unrealizedProfitLoss",
+      "type": "std/double"
+    },
+    {
+      "name": "totalMaintenanceMargin",
+      "type": "std/double"
+    },
+    {
+      "name": "totalContracts",
+      "type": "std/int32"
+    },
+    {
+      "name": "marginChargedLongOpen",
+      "type": "std/double"
+    },
+    {
+      "name": "marginChargedShortOpen",
+      "type": "std/double"
+    },
+    {
+      "name": "unchargedMarginLongOpen",
+      "type": "std/double"
+    },
+    {
+      "name": "unchargedMarginShortOpen",
+      "type": "std/double"
+    },
+    {
+      "name": "isolatedCurrency",
+      "type": "std/string_view"
+    },
+    {
+      "name": "isolatedLeverage",
+      "type": "std/double"
+    },
+    {
+      "name": "totalFees",
+      "type": "std/double"
+    },
+    {
+      "name": "totalValue",
+      "type": "std/double"
+    },
+    {
+      "name": "adlScoreBucket",
+      "type": "std/int32"
+    },
+    {
+      "name": "adlScorePercentile",
+      "type": "std/double"
+    },
+    {
+      "name": "orderTypeName",
+      "type": "roq/btse_futures/protocol/json/PositionOrderType"
+    },
+    {
+      "name": "orderModeName",
+      "type": "roq/btse_futures/protocol/json/OrderMode"
+    },
+    {
+      "name": "marginTypeName",
+      "type": "roq/btse_futures/protocol/json/MarginType"
+    },
+    {
+      "name": "currentLeverage",
+      "type": "std/double"
+    },
+    {
+      "name": "contractSize",
+      "type": "std/double"
+    },
+    {
+      "name": "minimumRequiredMargin",
+      "type": "std/double"
+    },
+    {
+      "name": "filledSize",
+      "type": "std/double"
+    },
+    {
+      "name": "takeProfitOrder",
+      "type": "std/string_view"
+    },
+    {
+      "name": "stopLossOrder",
+      "type": "std/string_view"
+    },
+    {
+      "name": "positionId",
+      "type": "std/string_view"
+    },
+    {
+      "name": "activeWalletName",
+      "type": "std/string_view"
+    },
+    {
+      "name": "positionMode",
+      "type": "roq/btse_futures/protocol/json/PositionMode"
+    },
+    {
+      "name": "positionDirection",
+      "type": "roq/btse_futures/protocol/json/PositionDirection"
+    },
+    {
+      "name": "serviceType",
+      "type": "std/int32"
+    },
+    {
+      "name": "avgFilledPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "sellExchangeRate",
+      "type": "std/double"
+    },
+    {
+      "name": "future",
+      "type": "std/bool"
+    },
+    {
+      "name": "settleWithNonUSDAsset",
+      "type": "std/string_view"
+    },
+    {
+      "name": "estimatedLossMargin",
+      "type": "std/double"
+    }
+  ]
+}

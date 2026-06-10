@@ -23,7 +23,7 @@
 #include "roq/btse_futures/gateway/account.hpp"
 #include "roq/btse_futures/gateway/shared.hpp"
 
-#include "roq/btse_futures/json/get_market_summary_ack.hpp"
+#include "roq/btse_futures/protocol/json/get_market_summary_ack.hpp"
 
 namespace roq {
 namespace btse_futures {
@@ -76,7 +76,7 @@ struct Rest final : public web::rest::Client::Handler {
 
   void get_market_summary();
   void get_market_summary_ack(Trace<web::rest::Response> const &, uint32_t sequence);
-  void operator()(Trace<json::GetMarketSummaryAck> const &);
+  void operator()(Trace<protocol::json::GetMarketSummaryAck> const &);
 
   void process_response(web::rest::Response const &, auto error_handler, auto success_handler);
 

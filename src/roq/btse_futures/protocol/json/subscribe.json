@@ -1,0 +1,15 @@
+{
+  "name": "roq/btse_futures/protocol/json/Subscribe",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "event",
+      "type": "roq/btse_futures/protocol/json/Event"
+    },
+    {
+      "name": "channel",
+      "type": "std/string_view",
+      "array": "std/span"
+    }
+  ]
+}

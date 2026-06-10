@@ -1,9 +1,0 @@
-{
-  "name": "roq/btse_futures/json/PositionOrderType",
-  "type": "enum",
-  "values": [
-    {
-      "name": "TYPE_FUTURES_POSITION"
-    }
-  ]
-}

@@ -1,0 +1,14 @@
+{
+  "name": "roq/btse_futures/protocol/json/Login",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "event",
+      "type": "roq/btse_futures/protocol/json/Event"
+    },
+    {
+      "name": "success",
+      "type": "std/bool"
+    }
+  ]
+}

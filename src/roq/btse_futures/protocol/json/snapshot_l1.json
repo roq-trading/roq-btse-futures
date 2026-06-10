@@ -1,0 +1,14 @@
+{
+  "name": "roq/btse_futures/protocol/json/SnapshotL1",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "topic",
+      "type": "std/string_view"
+    },
+    {
+      "name": "data",
+      "type": "roq/btse_futures/protocol/json/SnapshotL1Data"
+    }
+  ]
+}

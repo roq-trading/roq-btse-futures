@@ -11,7 +11,7 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-using value_type = json::Update;
+using value_type = protocol::json::Update;
 
 // note! truncated
 TEST_CASE("snapshot", "[json_update]") {

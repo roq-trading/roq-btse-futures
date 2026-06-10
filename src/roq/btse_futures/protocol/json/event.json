@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/protocol/json/Event",
+  "type": "enum",
+  "values": [
+    {
+      "name": "login"
+    },
+    {
+      "name": "subscribe"
+    }
+  ]
+}

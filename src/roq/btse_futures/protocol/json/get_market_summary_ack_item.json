@@ -1,0 +1,139 @@
+{
+  "name": "roq/btse_futures/protocol/json/GetMarketSummaryAckItem",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "symbol",
+      "type": "std/string_view"
+    },
+    {
+      "name": "last",
+      "type": "std/double"
+    },
+    {
+      "name": "lowestAsk",
+      "type": "std/double"
+    },
+    {
+      "name": "highestBid",
+      "type": "std/double"
+    },
+    {
+      "name": "openInterest",
+      "type": "std/double"
+    },
+    {
+      "name": "openInterestUSD",
+      "type": "std/double"
+    },
+    {
+      "name": "percentageChange",
+      "type": "std/double"
+    },
+    {
+      "name": "volume",
+      "type": "std/double"
+    },
+    {
+      "name": "high24Hr",
+      "type": "std/double"
+    },
+    {
+      "name": "low24Hr",
+      "type": "std/double"
+    },
+    {
+      "name": "base",
+      "type": "std/string_view"
+    },
+    {
+      "name": "quote",
+      "type": "std/string_view"
+    },
+    {
+      "name": "contractStart",
+      "type": "std/seconds"
+    },
+    {
+      "name": "contractEnd",
+      "type": "std/seconds"
+    },
+    {
+      "name": "active",
+      "type": "std/bool"
+    },
+    {
+      "name": "timeBasedContract",
+      "type": "std/bool"
+    },
+    {
+      "name": "openTime",
+      "type": "std/seconds"
+    },
+    {
+      "name": "closeTime",
+      "type": "std/seconds"
+    },
+    {
+      "name": "startMatching",
+      "type": "std/seconds"
+    },
+    {
+      "name": "inactiveTime",
+      "type": "std/seconds"
+    },
+    {
+      "name": "fundingRate",
+      "type": "std/double"
+    },
+    {
+      "name": "contractSize",
+      "type": "std/double"
+    },
+    {
+      "name": "maxPosition",
+      "type": "std/double"
+    },
+    {
+      "name": "minValidPrice",
+      "type": "std/double"
+    },
+    {
+      "name": "minPriceIncrement",
+      "type": "std/double"
+    },
+    {
+      "name": "minOrderSize",
+      "type": "std/double"
+    },
+    {
+      "name": "maxOrderSize",
+      "type": "std/double"
+    },
+    {
+      "name": "minRiskLimit",
+      "type": "std/double"
+    },
+    {
+      "name": "maxRiskLimit",
+      "type": "std/double"
+    },
+    {
+      "name": "minSizeIncrement",
+      "type": "std/double"
+    },
+    {
+      "name": "availableSettlement",
+      "type": "std/string_view",
+      "array": "std/span"
+    },
+    {
+      "name": "minPositionsUSDValue",
+      "type": "std/double"
+    },
+    {
+      "name": "maxPositionsUSDValue",
+      "type": "std/double"
+    }
+  ]
+}

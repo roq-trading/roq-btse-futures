@@ -11,7 +11,7 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-using value_type = json::TradeHistory;
+using value_type = protocol::json::TradeHistory;
 
 // note! truncated
 TEST_CASE("snapshot", "[json_trade_history]") {

@@ -4,7 +4,7 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/btse_futures/json/modify_order_ack.hpp"
+#include "roq/btse_futures/protocol/json/modify_order_ack.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
@@ -13,7 +13,7 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-using value_type = json::ModifyOrderAck;
+using value_type = protocol::json::ModifyOrderAck;
 
 TEST_CASE("success", "[json_modify_order_ack]") {
   auto message = R"([{)"

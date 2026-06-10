@@ -1,0 +1,36 @@
+{
+  "name": "roq/btse_futures/protocol/json/TimeInForce",
+  "type": "enum",
+  "values": [
+    {
+      "name": "GTC"
+    },
+    {
+      "name": "IOC"
+    },
+    {
+      "name": "FOK"
+    },
+    {
+      "name": "HALFMIN"
+    },
+    {
+      "name": "FIVEMIN"
+    },
+    {
+      "name": "HOUR"
+    },
+    {
+      "name": "TWELVEHOUR"
+    },
+    {
+      "name": "DAY"
+    },
+    {
+      "name": "WEEK"
+    },
+    {
+      "name": "MONTH"
+    }
+  ]
+}

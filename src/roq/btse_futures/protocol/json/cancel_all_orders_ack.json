@@ -1,0 +1,11 @@
+{
+  "name": "roq/btse_futures/protocol/json/CancelAllOrdersAck",
+  "type": "array",
+  "values": [
+    {
+      "name": "data",
+      "type": "roq/btse_futures/protocol/json/CancelAllOrdersAckItem",
+      "array": "std/span"
+    }
+  ]
+}

@@ -13,10 +13,10 @@
 
 #include "roq/server/oms/exceptions.hpp"
 
-#include "roq/btse_futures/json/encoder.hpp"
-#include "roq/btse_futures/json/error.hpp"
-#include "roq/btse_futures/json/map.hpp"
-#include "roq/btse_futures/json/utils.hpp"
+#include "roq/btse_futures/protocol/json/encoder.hpp"
+#include "roq/btse_futures/protocol/json/error.hpp"
+#include "roq/btse_futures/protocol/json/map.hpp"
+#include "roq/btse_futures/protocol/json/utils.hpp"
 
 using namespace std::literals;
 
@@ -329,7 +329,7 @@ void OrderEntry::get_position_mode_ack(Trace<web::rest::Response> const &event, 
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::GetPositionModeAck position_mode_ack{body, decode_buffer_};
+        protocol::json::GetPositionModeAck position_mode_ack{body, decode_buffer_};
         Trace event{trace_info, position_mode_ack};
         (*this)(event);
         download_.check(state);
@@ -339,7 +339,7 @@ void OrderEntry::get_position_mode_ack(Trace<web::rest::Response> const &event, 
   });
 }
 
-void OrderEntry::operator()(Trace<json::GetPositionModeAck> const &event) {
+void OrderEntry::operator()(Trace<protocol::json::GetPositionModeAck> const &event) {
   auto &[trace_info, position_mode_ack] = event;
   log::info<4>("position_mode_ack={}"sv, position_mode_ack);
 }
@@ -381,7 +381,7 @@ void OrderEntry::get_wallet_ack(Trace<web::rest::Response> const &event, uint32_
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::GetWalletAck wallet_ack{body, decode_buffer_};
+        protocol::json::GetWalletAck wallet_ack{body, decode_buffer_};
         Trace event{trace_info, wallet_ack};
         (*this)(event);
         download_.check(state);
@@ -391,7 +391,7 @@ void OrderEntry::get_wallet_ack(Trace<web::rest::Response> const &event, uint32_
   });
 }
 
-void OrderEntry::operator()(Trace<json::GetWalletAck> const &event) {
+void OrderEntry::operator()(Trace<protocol::json::GetWalletAck> const &event) {
   auto &[trace_info, wallet_ack] = event;
   log::info<4>("wallet_ack={}"sv, wallet_ack);
 }
@@ -433,7 +433,7 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::GetPositionsAck positions_ack{body, decode_buffer_};
+        protocol::json::GetPositionsAck positions_ack{body, decode_buffer_};
         Trace event{trace_info, positions_ack};
         (*this)(event);
         download_.check(state);
@@ -443,13 +443,13 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
   });
 }
 
-void OrderEntry::operator()(Trace<json::GetPositionsAck> const &event) {
+void OrderEntry::operator()(Trace<protocol::json::GetPositionsAck> const &event) {
   auto &[trace_info, positions_ack] = event;
   log::info<4>("positions_ack={}"sv, positions_ack);
   for (auto &item : positions_ack.data) {
     auto long_quantity = [&]() -> double {
       switch (item.side) {
-        using enum json::Side::type_t;
+        using enum protocol::json::Side::type_t;
         case UNDEFINED_INTERNAL:
           break;
         case UNKNOWN_INTERNAL:
@@ -463,7 +463,7 @@ void OrderEntry::operator()(Trace<json::GetPositionsAck> const &event) {
     }();
     auto short_quantity = [&]() -> double {
       switch (item.side) {
-        using enum json::Side::type_t;
+        using enum protocol::json::Side::type_t;
         case UNDEFINED_INTERNAL:
           break;
         case UNKNOWN_INTERNAL:
@@ -530,7 +530,7 @@ void OrderEntry::get_open_orders_ack(Trace<web::rest::Response> const &event, ui
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::GetOpenOrdersAck open_orders_ack{body, decode_buffer_};
+        protocol::json::GetOpenOrdersAck open_orders_ack{body, decode_buffer_};
         Trace event{trace_info, open_orders_ack};
         (*this)(event);
         download_.check(state);
@@ -540,7 +540,7 @@ void OrderEntry::get_open_orders_ack(Trace<web::rest::Response> const &event, ui
   });
 }
 
-void OrderEntry::operator()(Trace<json::GetOpenOrdersAck> const &event) {
+void OrderEntry::operator()(Trace<protocol::json::GetOpenOrdersAck> const &event) {
   auto &[trace_info, open_orders_ack] = event;
   log::info<4>("open_orders_ack={}"sv, open_orders_ack);
   for (auto &item : open_orders_ack.data) {
@@ -628,13 +628,13 @@ void OrderEntry::get_fill_history_ack(Trace<web::rest::Response> const &event, u
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::FillHistory fill_history{body, decode_buffer_};
+        protocol::json::FillHistory fill_history{body, decode_buffer_};
         if (fill_history.code == 0) {
           Trace event{trace_info, fill_history};
           (*this)(event);
           download_.check(state);
         } else {
-          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(fill_history.code), fill_history.msg);
+          handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(fill_history.code), fill_history.msg);
         }
       }
     };
@@ -642,12 +642,12 @@ void OrderEntry::get_fill_history_ack(Trace<web::rest::Response> const &event, u
   });
 }
 
-void OrderEntry::operator()(Trace<json::FillHistory> const &event) {
+void OrderEntry::operator()(Trace<protocol::json::FillHistory> const &event) {
   auto &[trace_info, fill_history] = event;
   log::info<4>("fill_history={}"sv, fill_history);
   std::string_view symbol, order_id, client_oid;
-  json::Side side = {};
-  json::TradeSide trade_side = {};
+  protocol::json::Side side = {};
+  protocol::json::TradeSide trade_side = {};
   std::chrono::nanoseconds created_time = {};
   std::chrono::nanoseconds updated_time = {};
   auto dispatch = [&]() {
@@ -742,7 +742,7 @@ void OrderEntry::create_order(
     }
     auto &[message_info, create_order] = event;
     auto path = shared_.api.order_management.create_order;
-    auto body = json::Encoder::place_order(encode_buffer_, create_order, order, ref_data, request_id);
+    auto body = protocol::json::Encoder::place_order(encode_buffer_, create_order, order, ref_data, request_id);
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
         .method = web::http::Method::POST,
@@ -784,7 +784,7 @@ void OrderEntry::create_order_ack(Trace<web::rest::Response> const &event, uint8
       (*this)(event_2, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
-      json::PlaceOrderAck place_order_ack{body, decode_buffer_};
+      protocol::json::PlaceOrderAck place_order_ack{body, decode_buffer_};
       size_t failed = 0;
       for (auto &item : place_order_ack.data) {
         if (item.status != STATUS_REJECTED) {
@@ -803,7 +803,10 @@ void OrderEntry::create_order_ack(Trace<web::rest::Response> const &event, uint8
 }
 
 void OrderEntry::operator()(
-    Trace<json::PlaceOrderAck> const &event, [[maybe_unused]] uint8_t user_id, [[maybe_unused]] uint64_t order_id, [[maybe_unused]] uint32_t version) {
+    Trace<protocol::json::PlaceOrderAck> const &event,
+    [[maybe_unused]] uint8_t user_id,
+    [[maybe_unused]] uint64_t order_id,
+    [[maybe_unused]] uint32_t version) {
   auto &[trace_info, place_order_ack] = event;
   log::info<2>("place_order_ack={}"sv, place_order_ack);
   // XXX FIXME TODO reject => response
@@ -823,7 +826,7 @@ void OrderEntry::amend_order(
     }
     auto &[message_info, modify_order] = event;
     auto path = shared_.api.order_management.amend_order;
-    auto body = json::Encoder::modify_order(encode_buffer_, modify_order, order, ref_data, request_id);
+    auto body = protocol::json::Encoder::modify_order(encode_buffer_, modify_order, order, ref_data, request_id);
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
         .method = web::http::Method::PUT,
@@ -865,7 +868,7 @@ void OrderEntry::amend_order_ack(Trace<web::rest::Response> const &event, uint8_
       (*this)(event_2, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
-      json::ModifyOrderAck modify_order_ack{body, decode_buffer_};
+      protocol::json::ModifyOrderAck modify_order_ack{body, decode_buffer_};
       size_t failed = 0;
       for (auto &item : modify_order_ack.data) {
         if (item.status != STATUS_REJECTED) {
@@ -884,7 +887,10 @@ void OrderEntry::amend_order_ack(Trace<web::rest::Response> const &event, uint8_
 }
 
 void OrderEntry::operator()(
-    Trace<json::ModifyOrderAck> const &event, [[maybe_unused]] uint8_t user_id, [[maybe_unused]] uint64_t order_id, [[maybe_unused]] uint32_t version) {
+    Trace<protocol::json::ModifyOrderAck> const &event,
+    [[maybe_unused]] uint8_t user_id,
+    [[maybe_unused]] uint64_t order_id,
+    [[maybe_unused]] uint32_t version) {
   auto &[trace_info, modify_order_ack] = event;
   log::info<2>("modify_order_ack={}"sv, modify_order_ack);
   // XXX FIXME TODO reject => response
@@ -904,7 +910,7 @@ void OrderEntry::cancel_order(
     }
     auto &[message_info, cancel_order] = event;
     auto path = shared_.api.order_management.cancel_order;
-    auto query = json::Encoder::cancel_order(encode_buffer_, cancel_order, order, ref_data, request_id);
+    auto query = protocol::json::Encoder::cancel_order(encode_buffer_, cancel_order, order, ref_data, request_id);
     auto headers = account_.create_headers(path);
     auto request = web::rest::Request{
         .method = web::http::Method::DELETE,
@@ -946,7 +952,7 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
       (*this)(event_2, user_id, order_id);
     };
     auto handle_success = [&](auto &body) {
-      json::CancelOrderAck cancel_order_ack{body, decode_buffer_};
+      protocol::json::CancelOrderAck cancel_order_ack{body, decode_buffer_};
       size_t failed = 0;
       for (auto &item : cancel_order_ack.data) {
         if (item.status != STATUS_REJECTED) {
@@ -965,7 +971,10 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
 }
 
 void OrderEntry::operator()(
-    Trace<json::CancelOrderAck> const &event, [[maybe_unused]] uint8_t user_id, [[maybe_unused]] uint64_t order_id, [[maybe_unused]] uint32_t version) {
+    Trace<protocol::json::CancelOrderAck> const &event,
+    [[maybe_unused]] uint8_t user_id,
+    [[maybe_unused]] uint64_t order_id,
+    [[maybe_unused]] uint32_t version) {
   auto &[trace_info, cancel_order_ack] = event;
   log::info<2>("cancel_order_ack={}"sv, cancel_order_ack);
   // XXX FIXME TODO reject => response
@@ -981,7 +990,7 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
     auto &[message_info, cancel_all_orders] = event;
     auto helper = [&](auto &symbol) {
       auto path = shared_.api.order_management.cancel_all_orders;
-      auto query = json::Encoder::cancel_all_orders(encode_buffer_, cancel_all_orders, request_id, symbol);
+      auto query = protocol::json::Encoder::cancel_all_orders(encode_buffer_, cancel_all_orders, request_id, symbol);
       auto headers = account_.create_headers(path);
       auto request = web::rest::Request{
           .method = web::http::Method::DELETE,
@@ -1034,7 +1043,7 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
       shared_(event_2);
     };
     auto handle_success = [&](auto &body) {
-      json::CancelAllOrdersAck cancel_all_orders_ack{body, decode_buffer_};
+      protocol::json::CancelAllOrdersAck cancel_all_orders_ack{body, decode_buffer_};
       Trace event_2{event, cancel_all_orders_ack};
       (*this)(event_2, request_id);
     };
@@ -1042,7 +1051,7 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
   });
 }
 
-void OrderEntry::operator()(Trace<json::CancelAllOrdersAck> const &event, [[maybe_unused]] std::string_view const &request_id) {
+void OrderEntry::operator()(Trace<protocol::json::CancelAllOrdersAck> const &event, [[maybe_unused]] std::string_view const &request_id) {
   auto &[trace_info, cancel_all_orders_ack] = event;
   log::info<2>("cancel_all_orders_ack={}"sv, cancel_all_orders_ack);
   // XXX FIXME TODO reject => response
@@ -1053,7 +1062,7 @@ void OrderEntry::operator()(Trace<json::CancelAllOrdersAck> const &event, [[mayb
 void OrderEntry::cancel_all_after() {
   profile_.countdown_cancel_all([&]() {
     auto path = shared_.api.order_management.cancel_all_after;
-    auto body = json::Encoder::cancel_all_after(encode_buffer_, utils::safe_cast{shared_.settings.rest.ping_freq});
+    auto body = protocol::json::Encoder::cancel_all_after(encode_buffer_, utils::safe_cast{shared_.settings.rest.ping_freq});
     auto headers = account_.create_headers(path, body);
     auto request = web::rest::Request{
         .method = web::http::Method::POST,
@@ -1119,8 +1128,8 @@ void OrderEntry::process_response(web::rest::Response const &response, auto erro
               auto message = fmt::format("{}"sv, status);
               error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, Error::UNKNOWN, message);
             } else {
-              json::Error error{body};
-              error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(error.error_code), error.message);
+              protocol::json::Error error{body};
+              error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(error.error_code), error.message);
             }
         }
         break;

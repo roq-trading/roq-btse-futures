@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/protocol/json/PositionDirection",
+  "type": "enum",
+  "values": [
+    {
+      "name": "LONG"
+    },
+    {
+      "name": "SHORT"
+    }
+  ]
+}

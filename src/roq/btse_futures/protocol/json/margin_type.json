@@ -1,0 +1,9 @@
+{
+  "name": "roq/btse_futures/protocol/json/MarginType",
+  "type": "enum",
+  "values": [
+    {
+      "name": "FUTURES_MARGIN_CROSS"
+    }
+  ]
+}

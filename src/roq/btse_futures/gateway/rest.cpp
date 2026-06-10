@@ -12,8 +12,8 @@
 
 #include "roq/utils/metrics/factory.hpp"
 
-#include "roq/btse_futures/json/map.hpp"
-#include "roq/btse_futures/json/utils.hpp"
+#include "roq/btse_futures/protocol/json/map.hpp"
+#include "roq/btse_futures/protocol/json/utils.hpp"
 
 using namespace std::literals;
 
@@ -220,7 +220,7 @@ void Rest::get_market_summary_ack(Trace<web::rest::Response> const &event, uint3
       if (download_.skip(sequence, state)) {
         log::info("Download state={} has already been processed"sv, state);
       } else {
-        json::GetMarketSummaryAck market_summary_ack{body, decode_buffer_};
+        protocol::json::GetMarketSummaryAck market_summary_ack{body, decode_buffer_};
         Trace event{trace_info, market_summary_ack};
         (*this)(event);
         download_.check(state);
@@ -230,7 +230,7 @@ void Rest::get_market_summary_ack(Trace<web::rest::Response> const &event, uint3
   });
 }
 
-void Rest::operator()(Trace<json::GetMarketSummaryAck> const &event) {
+void Rest::operator()(Trace<protocol::json::GetMarketSummaryAck> const &event) {
   auto &[trace_info, market_summary_ack] = event;
   log::info<4>("market_summary_ack={}"sv, market_summary_ack);
   auto &data = market_summary_ack.data;
@@ -337,8 +337,8 @@ void Rest::process_response(web::rest::Response const &response, auto error_hand
             assert(false);
             [[fallthrough]];
           default: {
-            // json::Message error{body};
-            // XXX HANS error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, json::guess_error(error.code), error.msg);
+            // protocol::json::Message error{body};
+            // XXX HANS error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(error.code), error.msg);
           }
         }
         break;

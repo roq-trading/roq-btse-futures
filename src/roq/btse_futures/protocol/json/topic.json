@@ -1,0 +1,27 @@
+{
+  "name": "roq/btse_futures/protocol/json/Topic",
+  "type": "enum",
+  "values": [
+    {
+      "name": "tradeHistoryApi"
+    },
+    {
+      "name": "snapshotL1"
+    },
+    {
+      "name": "update"
+    },
+    {
+      "name": "positionsV3"
+    },
+    {
+      "name": "allPositionV4"
+    },
+    {
+      "name": "notificationApiV4"
+    },
+    {
+      "name": "fillsV2"
+    }
+  ]
+}

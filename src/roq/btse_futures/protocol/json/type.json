@@ -1,0 +1,12 @@
+{
+  "name": "roq/btse_futures/protocol/json/Type",
+  "type": "enum",
+  "values": [
+    {
+      "name": "snapshot"
+    },
+    {
+      "name": "delta"
+    }
+  ]
+}

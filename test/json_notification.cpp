@@ -4,14 +4,14 @@
 
 #include "parser_tester.hpp"
 
-#include "roq/btse_futures/json/map.hpp"
+#include "roq/btse_futures/protocol/json/map.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
 
 using namespace std::literals;
 
-using value_type = json::Notification;
+using value_type = protocol::json::Notification;
 
 TEST_CASE("rejected", "[json_notification]") {
   auto message = R"({)"

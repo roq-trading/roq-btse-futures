@@ -4,7 +4,7 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/btse_futures/json/get_positions_ack.hpp"
+#include "roq/btse_futures/protocol/json/get_positions_ack.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
@@ -13,7 +13,7 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-using value_type = json::GetPositionsAck;
+using value_type = protocol::json::GetPositionsAck;
 
 TEST_CASE("flat", "[json_get_positions_ack]") {
   auto message = R"([)"

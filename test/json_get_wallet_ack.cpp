@@ -4,7 +4,7 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/btse_futures/json/get_wallet_ack.hpp"
+#include "roq/btse_futures/protocol/json/get_wallet_ack.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
@@ -13,7 +13,7 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-using value_type = json::GetWalletAck;
+using value_type = protocol::json::GetWalletAck;
 
 TEST_CASE("success", "[json_get_wallet_ack]") {
   auto message = R"([{)"

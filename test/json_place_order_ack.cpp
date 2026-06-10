@@ -4,7 +4,7 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/btse_futures/json/place_order_ack.hpp"
+#include "roq/btse_futures/protocol/json/place_order_ack.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
@@ -13,7 +13,7 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-using value_type = json::PlaceOrderAck;
+using value_type = protocol::json::PlaceOrderAck;
 
 TEST_CASE("failure", "[json_place_order_ack]") {
   auto message =

@@ -9,7 +9,7 @@ using namespace roq::btse_futures;
 
 using namespace std::literals;
 
-using value_type = json::Fills;
+using value_type = protocol::json::Fills;
 
 TEST_CASE("buy", "[json_fills]") {
   auto message = R"({)"

@@ -1,0 +1,21 @@
+{
+  "name": "roq/btse_futures/protocol/json/Error",
+  "type": "dictionary",
+  "values": [
+    {
+      "name": "status",
+      "type": "std/int32"
+    },
+    {
+      "name": "errorCode",
+      "type": "std/int32"
+    },
+    {
+      "name": "message",
+      "type": "std/string_view"
+    },
+    {
+      "name": "extraData"
+    }
+  ]
+}

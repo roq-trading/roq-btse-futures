@@ -4,7 +4,7 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/btse_futures/json/get_market_summary_ack.hpp"
+#include "roq/btse_futures/protocol/json/get_market_summary_ack.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
@@ -13,7 +13,7 @@ using namespace std::literals;
 
 using namespace Catch::literals;
 
-using value_type = json::GetMarketSummaryAck;
+using value_type = protocol::json::GetMarketSummaryAck;
 
 // note! reduced
 TEST_CASE("simple", "[json_get_market_summary_ack]") {

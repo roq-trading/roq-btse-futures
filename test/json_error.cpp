@@ -4,14 +4,14 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/btse_futures/json/error.hpp"
+#include "roq/btse_futures/protocol/json/error.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
 
 using namespace std::literals;
 
-using value_type = json::Error;
+using value_type = protocol::json::Error;
 
 TEST_CASE("user_session_expired", "[json_error]") {
   auto message = R"({)"

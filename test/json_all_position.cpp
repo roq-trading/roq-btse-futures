@@ -9,7 +9,7 @@ using namespace roq::btse_futures;
 
 using namespace std::literals;
 
-using value_type = json::AllPosition;
+using value_type = protocol::json::AllPosition;
 
 TEST_CASE("long", "[json_all_position]") {
   auto message = R"({)"

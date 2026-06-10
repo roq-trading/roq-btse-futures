@@ -9,7 +9,7 @@ using namespace roq::btse_futures;
 
 using namespace std::literals;
 
-using value_type = json::SnapshotL1;
+using value_type = protocol::json::SnapshotL1;
 
 TEST_CASE("simple", "[json_snapshot_l1]") {
   auto message = R"({)"

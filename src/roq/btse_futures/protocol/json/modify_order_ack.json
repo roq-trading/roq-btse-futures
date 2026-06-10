@@ -1,0 +1,11 @@
+{
+  "name": "roq/btse_futures/protocol/json/ModifyOrderAck",
+  "type": "array",
+  "values": [
+    {
+      "name": "data",
+      "type": "roq/btse_futures/protocol/json/ModifyOrderAckItem",
+      "array": "std/span"
+    }
+  ]
+}

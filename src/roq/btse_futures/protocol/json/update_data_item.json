@@ -1,0 +1,14 @@
+{
+  "name": "roq/btse_futures/protocol/json/UpdateDataItem",
+  "type": "by_index",
+  "values": [
+    {
+      "name": "price",
+      "type": "std/double"
+    },
+    {
+      "name": "size",
+      "type": "std/double"
+    }
+  ]
+}

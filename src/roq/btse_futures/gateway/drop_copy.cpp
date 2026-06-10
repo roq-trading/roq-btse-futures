@@ -11,8 +11,8 @@
 
 #include "roq/utils/metrics/factory.hpp"
 
-#include "roq/btse_futures/json/map.hpp"
-#include "roq/btse_futures/json/utils.hpp"
+#include "roq/btse_futures/protocol/json/map.hpp"
+#include "roq/btse_futures/protocol/json/utils.hpp"
 
 using namespace std::literals;
 
@@ -219,7 +219,7 @@ void DropCopy::parse(std::string_view const &message) {
     auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
     try {
       TraceInfo trace_info;
-      if (!json::Parser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
+      if (!protocol::json::Parser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
         log_message();
       }
     } catch (...) {
@@ -229,27 +229,27 @@ void DropCopy::parse(std::string_view const &message) {
   });
 }
 
-// json::Parser::Handler
+// protocol::json::Parser::Handler
 
-void DropCopy::operator()(Trace<json::Pong> const &) {
+void DropCopy::operator()(Trace<protocol::json::Pong> const &) {
 }
 
-void DropCopy::operator()(Trace<json::Subscribe> const &) {
+void DropCopy::operator()(Trace<protocol::json::Subscribe> const &) {
 }
 
-void DropCopy::operator()(Trace<json::TradeHistory> const &) {
+void DropCopy::operator()(Trace<protocol::json::TradeHistory> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::SnapshotL1> const &) {
+void DropCopy::operator()(Trace<protocol::json::SnapshotL1> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::Update> const &) {
+void DropCopy::operator()(Trace<protocol::json::Update> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void DropCopy::operator()(Trace<json::Login> const &event) {
+void DropCopy::operator()(Trace<protocol::json::Login> const &event) {
   auto &[trace_info, login] = event;
   log::info<2>("login={}"sv, login);
   if (!login.success) {
@@ -260,7 +260,7 @@ void DropCopy::operator()(Trace<json::Login> const &event) {
   (*this)(ConnectionStatus::READY);
 }
 
-void DropCopy::operator()(Trace<json::Positions> const &event) {
+void DropCopy::operator()(Trace<protocol::json::Positions> const &event) {
   auto &[trace_info, positions] = event;
   log::info<2>("positions={}"sv, positions);
   auto strip_symbol_from_market_name = [](auto &market_name) {
@@ -270,7 +270,7 @@ void DropCopy::operator()(Trace<json::Positions> const &event) {
   for (auto &item : positions.data) {
     auto long_quantity = [&]() -> double {
       switch (item.position_direction) {
-        using enum json::PositionDirection::type_t;
+        using enum protocol::json::PositionDirection::type_t;
         case UNDEFINED_INTERNAL:
           break;
         case UNKNOWN_INTERNAL:
@@ -284,7 +284,7 @@ void DropCopy::operator()(Trace<json::Positions> const &event) {
     }();
     auto short_quantity = [&]() -> double {
       switch (item.position_direction) {
-        using enum json::PositionDirection::type_t;
+        using enum protocol::json::PositionDirection::type_t;
         case UNDEFINED_INTERNAL:
           break;
         case UNKNOWN_INTERNAL:
@@ -315,12 +315,12 @@ void DropCopy::operator()(Trace<json::Positions> const &event) {
 }
 
 // note! not using this because we don't get any (real) update when the position goes to zero
-void DropCopy::operator()(Trace<json::AllPosition> const &event) {
+void DropCopy::operator()(Trace<protocol::json::AllPosition> const &event) {
   auto &[trace_info, all_position] = event;
   log::info<2>("all_position={}"sv, all_position);
 }
 
-void DropCopy::operator()(Trace<json::Notification> const &event) {
+void DropCopy::operator()(Trace<protocol::json::Notification> const &event) {
   auto &[trace_info, notification] = event;
   log::info<2>("notification={}"sv, notification);
   for (auto &item : notification.data) {
@@ -383,7 +383,7 @@ void DropCopy::operator()(Trace<json::Notification> const &event) {
   }
 }
 
-void DropCopy::operator()(Trace<json::Fills> const &event) {
+void DropCopy::operator()(Trace<protocol::json::Fills> const &event) {
   auto &[trace_info, fills] = event;
   log::info<2>("fills={}"sv, fills);
   for (auto &item : fills.data) {

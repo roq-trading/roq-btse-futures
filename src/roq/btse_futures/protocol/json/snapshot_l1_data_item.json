@@ -1,0 +1,14 @@
+{
+  "name": "roq/btse_futures/protocol/json/SnapshotL1DataItem",
+  "type": "by_index",
+  "values": [
+    {
+      "name": "price",
+      "type": "std/double"
+    },
+    {
+      "name": "size",
+      "type": "std/double"
+    }
+  ]
+}

@@ -4,14 +4,14 @@
 
 #include "roq/core/json/buffer_stack.hpp"
 
-#include "roq/btse_futures/json/get_position_mode_ack.hpp"
+#include "roq/btse_futures/protocol/json/get_position_mode_ack.hpp"
 
 using namespace roq;
 using namespace roq::btse_futures;
 
 using namespace std::literals;
 
-using value_type = json::GetPositionModeAck;
+using value_type = protocol::json::GetPositionModeAck;
 
 TEST_CASE("empty", "[json_get_position_mode_ack]") {
   auto message = R"([)"

@@ -11,7 +11,7 @@
 
 #include "roq/utils/metrics/factory.hpp"
 
-#include "roq/btse_futures/json/map.hpp"
+#include "roq/btse_futures/protocol/json/map.hpp"
 
 using namespace std::literals;
 
@@ -236,7 +236,7 @@ void OrderBook::parse(std::string_view const &message) {
     auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
     try {
       TraceInfo trace_info;
-      if (!json::Parser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
+      if (!protocol::json::Parser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
         log_message();
       }
     } catch (...) {
@@ -246,19 +246,19 @@ void OrderBook::parse(std::string_view const &message) {
   });
 }
 
-// json::Parser::Handler
+// protocol::json::Parser::Handler
 
-void OrderBook::operator()(Trace<json::Pong> const &) {
+void OrderBook::operator()(Trace<protocol::json::Pong> const &) {
 }
 
-void OrderBook::operator()(Trace<json::Subscribe> const &) {
+void OrderBook::operator()(Trace<protocol::json::Subscribe> const &) {
 }
 
-void OrderBook::operator()(Trace<json::TradeHistory> const &) {
+void OrderBook::operator()(Trace<protocol::json::TradeHistory> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void OrderBook::operator()(Trace<json::SnapshotL1> const &event) {
+void OrderBook::operator()(Trace<protocol::json::SnapshotL1> const &event) {
   profile_.snapshot_l1([&]() {
     auto &[trace_info, snapshot_l1] = event;
     log::info<3>("snapshot_l1={}"sv, snapshot_l1);
@@ -287,7 +287,7 @@ void OrderBook::operator()(Trace<json::SnapshotL1> const &event) {
   });
 }
 
-void OrderBook::operator()(Trace<json::Update> const &event) {
+void OrderBook::operator()(Trace<protocol::json::Update> const &event) {
   profile_.update([&]() {
     auto &[trace_info, update] = event;
     log::info<3>("update={}"sv, update);
@@ -335,23 +335,23 @@ void OrderBook::operator()(Trace<json::Update> const &event) {
   });
 }
 
-void OrderBook::operator()(Trace<json::Login> const &) {
+void OrderBook::operator()(Trace<protocol::json::Login> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void OrderBook::operator()(Trace<json::Positions> const &) {
+void OrderBook::operator()(Trace<protocol::json::Positions> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void OrderBook::operator()(Trace<json::AllPosition> const &) {
+void OrderBook::operator()(Trace<protocol::json::AllPosition> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void OrderBook::operator()(Trace<json::Notification> const &) {
+void OrderBook::operator()(Trace<protocol::json::Notification> const &) {
   log::fatal("Unexpected"sv);
 }
 
-void OrderBook::operator()(Trace<json::Fills> const &) {
+void OrderBook::operator()(Trace<protocol::json::Fills> const &) {
   log::fatal("Unexpected"sv);
 }
 
