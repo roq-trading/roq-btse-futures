@@ -582,7 +582,7 @@ void OrderEntry::operator()(Trace<protocol::json::GetOpenOrdersAck> const &event
         .sending_time_utc = item.timestamp,
     };
     Trace event_2{trace_info, order_update};
-    (*this)(event_2, item.cl_order_id);
+    (*this)(event_2);
   }
 }
 /*
@@ -896,6 +896,7 @@ void OrderEntry::operator()(
   auto &[trace_info, modify_order_ack] = event;
   log::info<2>("modify_order_ack={}"sv, modify_order_ack);
   // XXX FIXME TODO reject => response
+  log::warn("modify_order_ack={}"sv, modify_order_ack);
 }
 
 // cancel-order
@@ -981,6 +982,7 @@ void OrderEntry::operator()(
   auto &[trace_info, cancel_order_ack] = event;
   log::info<2>("cancel_order_ack={}"sv, cancel_order_ack);
   // XXX FIXME TODO reject => response
+  log::warn("cancel_order_ack={}"sv, cancel_order_ack);
 }
 
 // cancel-all-orders
@@ -1163,9 +1165,9 @@ void OrderEntry::operator()(Trace<server::oms::Response> const &event, uint8_t u
   }
 }
 
-void OrderEntry::operator()(Trace<server::oms::OrderUpdate> const &event, std::string_view const &client_order_id) {
+void OrderEntry::operator()(Trace<server::oms::OrderUpdate> const &event) {
   auto &[trace_info, order_update] = event;
-  if (shared_.update_order(client_order_id, stream_id_, trace_info, order_update, [&]([[maybe_unused]] auto &order) {})) {
+  if (shared_.update_order(stream_id_, trace_info, order_update, [&]([[maybe_unused]] auto &order) {})) {
   } else {
     log::warn("*** EXTERNAL ORDER ***"sv);
   }

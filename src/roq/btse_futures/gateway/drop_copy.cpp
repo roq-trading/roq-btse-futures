@@ -324,12 +324,6 @@ void DropCopy::operator()(Trace<protocol::json::Notification> const &event) {
   auto &[trace_info, notification] = event;
   log::info<2>("notification={}"sv, notification);
   for (auto &item : notification.data) {
-    auto exchange_or_request_id = [&]() -> std::string_view {
-      if (std::empty(item.cl_order_id)) {
-        return item.order_id;
-      }
-      return item.cl_order_id;
-    }();
     auto order_status = map(item.status).template get<OrderStatus>();
     auto has_last_traded = std::isnan(item.filled_size) || utils::compare(item.filled_size, 0.0) == 0;
     auto last_traded_quantity = has_last_traded ? item.filled_size : NaN;
@@ -376,9 +370,9 @@ void DropCopy::operator()(Trace<protocol::json::Notification> const &event) {
         .update_type = UpdateType::INCREMENTAL,
         .sending_time_utc = item.timestamp,
     };
-    if (shared_.update_order(exchange_or_request_id, stream_id_, trace_info, order_update, [&]([[maybe_unused]] auto &order) {})) {
+    if (shared_.update_order(stream_id_, trace_info, order_update, [&]([[maybe_unused]] auto &order) {})) {
     } else {
-      log::warn("*** EXTERNAL ORDER *** ({} / {})"sv, item.order_id, exchange_or_request_id);
+      log::warn("*** EXTERNAL ORDER *** ({} / {})"sv, item.order_id, item.cl_order_id);
     }
   }
 }
@@ -387,12 +381,6 @@ void DropCopy::operator()(Trace<protocol::json::Fills> const &event) {
   auto &[trace_info, fills] = event;
   log::info<2>("fills={}"sv, fills);
   for (auto &item : fills.data) {
-    auto exchange_or_request_id = [&]() -> std::string_view {
-      if (std::empty(item.cl_order_id)) {
-        return item.order_id;
-      }
-      return item.cl_order_id;
-    }();
     auto liquidity = item.maker ? Liquidity::MAKER : Liquidity::TAKER;
     auto fill = Fill{
         .exchange_time_utc = item.timestamp,
@@ -429,7 +417,7 @@ void DropCopy::operator()(Trace<protocol::json::Fills> const &event) {
         .user = {},
         .strategy_id = {},
     };
-    create_trace_and_dispatch(handler_, trace_info, trade_update, true, SOURCE_NONE, exchange_or_request_id);
+    create_trace_and_dispatch(handler_, trace_info, trade_update, true, SOURCE_NONE);
   }
 }
 
