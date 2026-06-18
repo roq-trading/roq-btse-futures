@@ -370,10 +370,7 @@ void DropCopy::operator()(Trace<protocol::json::Notification> const &event) {
         .update_type = UpdateType::INCREMENTAL,
         .sending_time_utc = item.timestamp,
     };
-    if (shared_.update_order(stream_id_, trace_info, order_update, [&]([[maybe_unused]] auto &order) {})) {
-    } else {
-      log::warn("*** EXTERNAL ORDER *** ({} / {})"sv, item.order_id, item.cl_order_id);
-    }
+    create_trace_and_dispatch(shared_.dispatcher, trace_info, order_update, stream_id_);
   }
 }
 
