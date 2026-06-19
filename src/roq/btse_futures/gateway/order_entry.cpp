@@ -227,7 +227,7 @@ void OrderEntry::operator()(Trace<web::rest::Client::Latency> const &event) {
       .account = account_.name,
       .latency = latency.sample,
   };
-  create_trace_and_dispatch(handler_, trace_info, external_latency);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, external_latency);
   latency_.ping.update(latency.sample);
 }
 
@@ -250,7 +250,7 @@ void OrderEntry::operator()(ConnectionStatus connection_status, std::string_view
       .proxy = (*connection_).get_proxy(),
   };
   log::info("stream_status={}"sv, stream_status);
-  create_trace_and_dispatch(handler_, trace_info, stream_status);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
 }
 
 uint32_t OrderEntry::download(State state) {
@@ -489,7 +489,7 @@ void OrderEntry::operator()(Trace<protocol::json::GetPositionsAck> const &event)
         .exchange_sequence = {},
         .sending_time_utc = {},
     };
-    create_trace_and_dispatch(handler_, trace_info, position_update, true);
+    create_trace_and_dispatch(shared_.dispatcher, trace_info, position_update, true);
   }
 }
 
@@ -673,7 +673,7 @@ void OrderEntry::operator()(Trace<protocol::json::FillHistory> const &event) {
           .user = {},
           .strategy_id = {},
       };
-      create_trace_and_dispatch(handler_, trace_info, trade_update, true, SOURCE_NONE, client_oid);
+      create_trace_and_dispatch(shared_.dispatcher, trace_info, trade_update, true, SOURCE_NONE, client_oid);
       log::warn("DEBUG trade_update={}"sv, trade_update);
       shared_.fills.clear();
     }
@@ -1043,8 +1043,7 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
           .strategy_id = {},
       };
       TraceInfo trace_info;
-      Trace event_2{trace_info, cancel_all_orders_ack};
-      shared_(event_2);
+      create_trace_and_dispatch(shared_.dispatcher, trace_info, cancel_all_orders_ack);
     };
     auto handle_success = [&](auto &body) {
       protocol::json::CancelAllOrdersAck cancel_all_orders_ack{body, decode_buffer_};
