@@ -3,8 +3,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
-#include <vector>
 
 #include "roq/utils/metrics/counter.hpp"
 #include "roq/utils/metrics/latency.hpp"
@@ -75,6 +73,8 @@ struct OrderEntry final : public web::rest::Client::Handler {
   void operator()(Trace<web::rest::Client::Disconnected> const &) override;
   void operator()(Trace<web::rest::Client::Latency> const &) override;
 
+  // helpers
+
   void operator()(ConnectionStatus, std::string_view const &reason = {});
 
   enum class State {
@@ -90,37 +90,45 @@ struct OrderEntry final : public web::rest::Client::Handler {
   uint32_t download(State);
 
   // position-mode
+
   void get_position_mode();
   void get_position_mode_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::GetPositionModeAck> const &);
 
   // wallet
+
   void get_wallet();
   void get_wallet_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::GetWalletAck> const &);
 
   // positions
+
   void get_positions();
   void get_positions_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::GetPositionsAck> const &);
 
   // open_orders
+
   void get_open_orders();
   void get_open_orders_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::GetOpenOrdersAck> const &);
 
   /*
   // fill_history
+
   void get_fill_history();
   void get_fill_history_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::FillHistory> const &);
   */
+
   // create-order
+
   void create_order(Event<CreateOrder> const &, server::oms::Order const &, server::oms::RefData const &, std::string_view const &request_id);
   void create_order_ack(Trace<web::rest::Response> const &, uint8_t user_id, uint64_t order_id, uint32_t version);
   void operator()(Trace<protocol::json::PlaceOrderAck> const &, uint8_t user_id, uint64_t order_id, uint32_t version);
 
   // amend-order
+
   void amend_order(
       Event<ModifyOrder> const &,
       server::oms::Order const &,
@@ -131,6 +139,7 @@ struct OrderEntry final : public web::rest::Client::Handler {
   void operator()(Trace<protocol::json::ModifyOrderAck> const &, uint8_t user_id, uint64_t order_id, uint32_t version);
 
   // cancel-order
+
   void cancel_order(
       Event<CancelOrder> const &,
       server::oms::Order const &,
@@ -141,11 +150,13 @@ struct OrderEntry final : public web::rest::Client::Handler {
   void operator()(Trace<protocol::json::CancelOrderAck> const &, uint8_t user_id, uint64_t order_id, uint32_t version);
 
   // cancel-all-orders
+
   void cancel_all_orders(Event<CancelAllOrders> const &, std::string_view const &request_id);
   void cancel_all_orders_ack(Trace<web::rest::Response> const &, std::string_view const &request_id);
   void operator()(Trace<protocol::json::CancelAllOrdersAck> const &, std::string_view const &request_id);
 
   // cancel-all-after
+
   void cancel_all_after();
   void cancel_all_after_ack(Trace<web::rest::Response> const &);
   // void operator()(Trace<protocol::json::CancelAllOrdersAck> const &, uint8_t user_id);

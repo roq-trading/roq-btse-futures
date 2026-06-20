@@ -3,7 +3,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 
 #include "roq/utils/metrics/counter.hpp"
 #include "roq/utils/metrics/latency.hpp"
@@ -12,8 +11,6 @@
 #include "roq/io/context.hpp"
 
 #include "roq/web/socket/client.hpp"
-
-#include "roq/core/download.hpp"
 
 #include "roq/core/json/buffer_stack.hpp"
 
@@ -34,8 +31,6 @@ struct DropCopy final : public web::socket::Client::Handler, protocol::json::Par
   DropCopy(Handler &, io::Context &, uint16_t stream_id, Account &, Shared &);
 
   DropCopy(DropCopy const &) = delete;
-
-  bool ready() const;
 
   void operator()(Event<Start> const &);
   void operator()(Event<Stop> const &);
@@ -70,7 +65,10 @@ struct DropCopy final : public web::socket::Client::Handler, protocol::json::Par
   void operator()(Trace<protocol::json::Notification> const &) override;
   void operator()(Trace<protocol::json::Fills> const &) override;
 
- private:
+  // helpers
+
+  bool ready() const;
+
   void operator()(ConnectionStatus, std::string_view const &reason = {});
 
   void login();

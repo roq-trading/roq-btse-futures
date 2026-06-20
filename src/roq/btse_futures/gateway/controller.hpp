@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "roq/server.hpp"
@@ -80,7 +79,7 @@ struct Controller final : public server::Handler,
 
   void operator()(Rest::SymbolsUpdate &) override;
 
-  // utilities
+  // helpers
 
   void ensure_symbol_slices(size_t size);
 
