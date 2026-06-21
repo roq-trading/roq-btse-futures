@@ -82,7 +82,7 @@ struct MarketData final : public web::socket::Client::Handler, public protocol::
   void operator()(Trace<protocol::json::Fills> const &) override;
 
  private:
-  Handler &handler_;
+  [[maybe_unused]] Handler &handler_;
   // config
   uint16_t const stream_id_;
   std::string const name_;
