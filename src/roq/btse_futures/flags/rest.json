@@ -7,7 +7,6 @@
       "name": "uri",
       "type": "roq/io/web/URI",
       "validator": "roq/core/flags/URI",
-      "default": "https://testapi.btse.io/futures",
       "description": "Exchange end-point"
     },
     {

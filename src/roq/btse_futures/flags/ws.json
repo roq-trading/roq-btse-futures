@@ -7,14 +7,12 @@
       "name": "uri",
       "type": "roq/io/web/URI",
       "validator": "roq/core/flags/URI",
-      "default": "wss://testws.btse.io/ws/futures",
       "description": "Exchange end-point"
     },
     {
       "name": "uri_oss",
       "type": "roq/io/web/URI",
       "validator": "roq/core/flags/URI",
-      "default": "wss://testws.btse.io/ws/oss/futures",
       "description": "Exchange end-point"
     },
     {
