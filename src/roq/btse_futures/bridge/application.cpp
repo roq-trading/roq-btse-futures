@@ -1,21 +1,21 @@
 /* Copyright (c) 2017-2026, Hans Erik Thrane */
 
-#include "roq/btse_futures/proto_bridge/application.hpp"
+#include "roq/btse_futures/bridge/application.hpp"
 
 #include "roq/logging.hpp"
 
-#include "roq/server/proto_bridge/controller.hpp"
+#include "roq/server/bridge/controller.hpp"
 
 #include "roq/btse_futures/gateway/controller.hpp"
 
-#include "roq/btse_futures/proto_bridge/config.hpp"
-#include "roq/btse_futures/proto_bridge/settings.hpp"
+#include "roq/btse_futures/bridge/config.hpp"
+#include "roq/btse_futures/bridge/settings.hpp"
 
 using namespace std::literals;
 
 namespace roq {
 namespace btse_futures {
-namespace proto_bridge {
+namespace bridge {
 
 // === IMPLEMENTATION ===
 
@@ -24,10 +24,10 @@ int Application::main(args::Parser const &args) {
   Config config{settings};
   log::warn("config={}"sv, config);
   auto context = server::create_io_context(settings);
-  server::proto_bridge::Controller<gateway::Controller>{settings, config, *context}.dispatch();
+  server::bridge::Controller<gateway::Controller>{settings, config, *context}.dispatch();
   return EXIT_SUCCESS;
 }
 
-}  // namespace proto_bridge
+}  // namespace bridge
 }  // namespace btse_futures
 }  // namespace roq

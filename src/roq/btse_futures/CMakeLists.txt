@@ -6,6 +6,7 @@ add_subdirectory(tools)
 add_subdirectory(flags)
 add_subdirectory(gateway)
 
+add_subdirectory(bridge)
 add_subdirectory(fix_bridge)
 
 set(SOURCES application.cpp main.cpp)
