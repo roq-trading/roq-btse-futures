@@ -251,12 +251,19 @@ void DropCopy::operator()(Trace<protocol::json::Update> const &) {
 void DropCopy::operator()(Trace<protocol::json::Login> const &event) {
   auto &[trace_info, login] = event;
   log::info<2>("login={}"sv, login);
-  if (!login.success) {
-    log::fatal("Unexpected: login={}"sv, login);
+  if (login.success) {
+    subscribe();
+    ready_ = true;
+    (*this)(ConnectionStatus::READY);
+  } else {
+    if (shared_.settings.experimental.retry_logon) {
+      log::error("login={}"sv, login);
+      log::warn("Closing connection..."sv);
+      (*connection_).close();
+    } else {
+      log::fatal("login={}"sv, login);
+    }
   }
-  subscribe();
-  ready_ = true;
-  (*this)(ConnectionStatus::READY);
 }
 
 void DropCopy::operator()(Trace<protocol::json::Positions> const &event) {
