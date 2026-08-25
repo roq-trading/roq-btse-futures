@@ -257,11 +257,11 @@ void DropCopy::operator()(Trace<protocol::json::Login> const &event) {
     (*this)(ConnectionStatus::READY);
   } else {
     if (shared_.settings.experimental.retry_logon) {
-      log::error("login={}"sv, login);
+      log::error("[{}] login={}"sv, account_.name, login);
       log::warn("Closing connection..."sv);
       (*connection_).close();
     } else {
-      log::fatal("login={}"sv, login);
+      log::fatal("[{}] login={}"sv, account_.name, login);
     }
   }
 }
