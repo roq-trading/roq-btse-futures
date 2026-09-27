@@ -16,6 +16,8 @@
 #include "roq/btse_futures/gateway/api.hpp"
 #include "roq/btse_futures/gateway/settings.hpp"
 
+#include "roq/btse_futures/tools/rate_limit.hpp"
+
 namespace roq {
 namespace btse_futures {
 namespace gateway {
@@ -29,6 +31,8 @@ struct Shared final {
 
   Settings const &settings;
   API const api;
+
+  tools::RateLimit rate_limit;
 
   core::limit::RateLimiter rate_limiter;
 
