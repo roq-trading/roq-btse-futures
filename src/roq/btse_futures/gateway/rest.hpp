@@ -73,7 +73,7 @@ struct Rest final : public web::rest::Client::Handler {
   void get_market_summary_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::GetMarketSummaryAck> const &);
 
-  void process_response(web::rest::Response const &, auto error_handler, auto success_handler);
+  void process_response(Trace<web::rest::Response> const &, auto error_handler, auto success_handler);
 
  private:
   Handler &handler_;
