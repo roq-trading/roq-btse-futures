@@ -265,6 +265,8 @@ void MarketData::operator()(Trace<protocol::json::TradeHistory> const &event) {
         timestamp = item.timestamp;
       }
       auto trade = Trade{
+          .trade_conditions = {},
+          .trade_type = {},
           .side = map(item.side),
           .price = item.price,
           .quantity = item.size,
