@@ -91,6 +91,8 @@ DropCopy::DropCopy(Handler &handler, io::Context &context, uint16_t stream_id, A
       account_{account}, shared_{shared} {
 }
 
+// server::Stream
+
 bool DropCopy::ready() const {
   return (*connection_).ready();
 }
@@ -104,11 +106,11 @@ void DropCopy::operator()(Event<Stop> const &) {
 }
 
 void DropCopy::operator()(Event<Timer> const &event) {
-  auto now = event.value.now;
-  (*connection_).refresh(now);
+  auto &[trace_info, timer] = event;
+  (*connection_).refresh(timer.now);
   if (ready()) {
-    if (next_ping_ < now) {
-      next_ping_ = now + shared_.settings.ws.ping_freq;
+    if (next_ping_ < timer.now) {
+      next_ping_ = timer.now + shared_.settings.ws.ping_freq;
       (*connection_).send_text(PING);
     }
   }
@@ -125,18 +127,42 @@ void DropCopy::operator()(metrics::Writer &writer) const {
       .write(latency_.heartbeat, metrics::Type::LATENCY);
 }
 
+void DropCopy::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {
+  auto &[trace_info, connection_status] = event;
+  connection_status_ = connection_status;
+  auto stream_status = StreamStatus{
+      .stream_id = stream_id_,
+      .account = account_.name,
+      .supports = SUPPORTS,
+      .transport = Transport::TCP,
+      .protocol = Protocol::WS,
+      .encoding = {Encoding::JSON},
+      .priority = Priority::PRIMARY,
+      .connection_status = connection_status_,
+      .reason = reason,
+      .interface = (*connection_).get_interface(),
+      .authority = (*connection_).get_current_authority(),
+      .path = (*connection_).get_current_path(),
+      .proxy = (*connection_).get_proxy(),
+  };
+  log::info("stream_status={}"sv, stream_status);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+}
+
 // web::socket::Client::Handler
 
-void DropCopy::operator()(Trace<web::socket::Connected> const &) {
+void DropCopy::operator()(Trace<web::socket::Connected> const &event) {
+  auto &[trace_info, connected] = event;
   assert(logon_timeout_.count() == 0);
   auto now = clock::get_system();
   logon_timeout_ = now + shared_.settings.ws.request_timeout;
 }
 
-void DropCopy::operator()(Trace<web::socket::Disconnected> const &) {
+void DropCopy::operator()(Trace<web::socket::Disconnected> const &event) {
+  auto &[trace_info, disconnected] = event;
   ++counter_.disconnect;
   ready_ = false;
-  (*this)(ConnectionStatus::DISCONNECTED);
+  create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
   logon_timeout_ = {};
   next_ping_ = {};
 }
@@ -145,7 +171,9 @@ void DropCopy::operator()(Trace<web::socket::Ready> const &) {
   login();
 }
 
-void DropCopy::operator()(Trace<web::socket::Close> const &) {
+void DropCopy::operator()(Trace<web::socket::Close> const &event) {
+  auto &[trace_info, close] = event;
+  log::warn("close={}"sv, close);
 }
 
 void DropCopy::operator()(Trace<web::socket::Latency> const &event) {
@@ -166,67 +194,6 @@ void DropCopy::operator()(Trace<web::socket::Text> const &event) {
 
 void DropCopy::operator()(Trace<web::socket::Binary> const &) {
   log::fatal("Unexpected"sv);
-}
-
-void DropCopy::operator()(ConnectionStatus connection_status, std::string_view const &reason) {
-  connection_status_ = connection_status;
-  TraceInfo trace_info;
-  auto stream_status = StreamStatus{
-      .stream_id = stream_id_,
-      .account = account_.name,
-      .supports = SUPPORTS,
-      .transport = Transport::TCP,
-      .protocol = Protocol::WS,
-      .encoding = {Encoding::JSON},
-      .priority = Priority::PRIMARY,
-      .connection_status = connection_status_,
-      .reason = reason,
-      .interface = (*connection_).get_interface(),
-      .authority = (*connection_).get_current_authority(),
-      .path = (*connection_).get_current_path(),
-      .proxy = (*connection_).get_proxy(),
-  };
-  log::info("stream_status={}"sv, stream_status);
-  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
-}
-
-void DropCopy::login() {
-  auto message = account_.create_ws_login("/ws/futures"sv);
-  (*connection_).send_text(message);
-}
-
-void DropCopy::subscribe() {
-  subscribe("positionsV3"sv);
-  // subscribe("allPositionV4"sv);  // note! looks like snapshot -- doesn't notify zero position
-  subscribe("notificationApiV4"sv);
-  subscribe("fillsV2"sv);
-}
-
-void DropCopy::subscribe(std::string_view const &topic) {
-  log::info(R"(Subscribe topic="{}")"sv, topic);
-  auto message = fmt::format(
-      R"({{)"
-      R"("op":"subscribe",)"
-      R"("args":["{}"])"
-      R"(}})"sv,
-      topic);
-  log::debug("message={}"sv, message);
-  (*connection_).send_text(message);
-}
-
-void DropCopy::parse(std::string_view const &message) {
-  profile_.parse([&]() {
-    auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
-    try {
-      TraceInfo trace_info;
-      if (!protocol::json::Parser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
-        log_message();
-      }
-    } catch (...) {
-      log_message();
-      utils::exceptions::Unhandled::terminate();
-    }
-  });
 }
 
 // protocol::json::Parser::Handler
@@ -255,7 +222,7 @@ void DropCopy::operator()(Trace<protocol::json::Login> const &event) {
   if (login.success) {
     subscribe();
     ready_ = true;
-    (*this)(ConnectionStatus::READY);
+    create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
   } else {
     if (shared_.settings.experimental.retry_logon) {
       log::error("[{}] login={}"sv, account_.name, login);
@@ -424,6 +391,47 @@ void DropCopy::operator()(Trace<protocol::json::Fills> const &event) {
     };
     create_trace_and_dispatch(shared_.dispatcher, trace_info, trade_update, true, SOURCE_NONE);
   }
+}
+
+// helpers
+
+void DropCopy::login() {
+  auto message = account_.create_ws_login("/ws/futures"sv);
+  (*connection_).send_text(message);
+}
+
+void DropCopy::subscribe() {
+  subscribe("positionsV3"sv);
+  // subscribe("allPositionV4"sv);  // note! looks like snapshot -- doesn't notify zero position
+  subscribe("notificationApiV4"sv);
+  subscribe("fillsV2"sv);
+}
+
+void DropCopy::subscribe(std::string_view const &topic) {
+  log::info(R"(Subscribe topic="{}")"sv, topic);
+  auto message = fmt::format(
+      R"({{)"
+      R"("op":"subscribe",)"
+      R"("args":["{}"])"
+      R"(}})"sv,
+      topic);
+  log::debug("message={}"sv, message);
+  (*connection_).send_text(message);
+}
+
+void DropCopy::parse(std::string_view const &message) {
+  profile_.parse([&]() {
+    auto log_message = [&]() { log::warn(R"(*** PLEASE REPORT *** message="{}")"sv, message); };
+    try {
+      TraceInfo trace_info;
+      if (!protocol::json::Parser::dispatch(*this, message, decode_buffer_, trace_info, shared_.settings.experimental.allow_unknown_event_types)) {
+        log_message();
+      }
+    } catch (...) {
+      log_message();
+      utils::exceptions::Unhandled::terminate();
+    }
+  });
 }
 
 }  // namespace gateway

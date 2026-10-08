@@ -115,8 +115,10 @@ OrderEntry::OrderEntry(Handler &handler, io::Context &context, uint16_t stream_i
       latency_{
           .ping = create_metrics(shared.settings, name_, "ping"sv),
       },
-      account_{account}, shared_{shared}, download_{shared.settings.rest.request_timeout, [this](auto state) { return download(state); }} {
+      account_{account}, shared_{shared}, download_{shared.settings.rest.request_timeout, [this](auto &event) { return download(event); }} {
 }
+
+// server::Stream
 
 void OrderEntry::operator()(Event<Start> const &) {
   (*connection_).start();
@@ -127,13 +129,13 @@ void OrderEntry::operator()(Event<Stop> const &) {
 }
 
 void OrderEntry::operator()(Event<Timer> const &event) {
-  auto now = event.value.now;
-  (*connection_).refresh(now);
+  auto &[trace_info, timer] = event;
+  (*connection_).refresh(timer.now);
   if (!ready()) {
     return;
   }
-  if (master_ && shared_.settings.rest.cancel_on_disconnect && next_heartbeat_ < now) {
-    next_heartbeat_ = now + (shared_.settings.rest.ping_freq / 3);
+  if (master_ && shared_.settings.rest.cancel_on_disconnect && next_heartbeat_ < timer.now) {
+    next_heartbeat_ = timer.now + (shared_.settings.rest.ping_freq / 3);
     cancel_all_after();
   }
 }
@@ -166,6 +168,30 @@ void OrderEntry::operator()(metrics::Writer &writer) const {
       // latency
       .write(latency_.ping, metrics::Type::LATENCY);
 }
+
+void OrderEntry::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {
+  auto &[trace_info, connection_status] = event;
+  connection_status_ = connection_status;
+  auto stream_status = StreamStatus{
+      .stream_id = stream_id_,
+      .account = account_.name,
+      .supports = SUPPORTS,
+      .transport = Transport::TCP,
+      .protocol = Protocol::HTTP,
+      .encoding = {Encoding::JSON},
+      .priority = Priority::PRIMARY,
+      .connection_status = connection_status_,
+      .reason = reason,
+      .interface = (*connection_).get_interface(),
+      .authority = (*connection_).get_current_authority(),
+      .path = (*connection_).get_current_path(),
+      .proxy = (*connection_).get_proxy(),
+  };
+  log::info("stream_status={}"sv, stream_status);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+}
+
+// server::OrderActionStream
 
 uint16_t OrderEntry::operator()(
     Event<CreateOrder> const &event, server::oms::Order const &order, server::oms::RefData const &ref_data, std::string_view const &request_id) {
@@ -200,17 +226,19 @@ uint16_t OrderEntry::operator()(Event<CancelAllOrders> const &event, std::string
 
 // web::rest::Client::Handler
 
-void OrderEntry::operator()(Trace<web::rest::Connected> const &) {
+void OrderEntry::operator()(Trace<web::rest::Connected> const &event) {
+  auto &[trace_info, connected] = event;
   if (download_.downloading()) {
-    download_.bump();
+    download_.bump(trace_info);
   } else {
-    download_.begin();
+    download_.begin(trace_info);
   }
 }
 
-void OrderEntry::operator()(Trace<web::rest::Disconnected> const &) {
+void OrderEntry::operator()(Trace<web::rest::Disconnected> const &event) {
+  auto &[trace_info, disconnected] = event;
   ++counter_.disconnect;
-  (*this)(ConnectionStatus::DISCONNECTED);
+  create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
   if (!download_.downloading()) {
     download_.reset();
   }
@@ -228,53 +256,34 @@ void OrderEntry::operator()(Trace<web::rest::Latency> const &event) {
   latency_.ping.update(latency.sample);
 }
 
-void OrderEntry::operator()(ConnectionStatus connection_status, std::string_view const &reason) {
-  connection_status_ = connection_status;
-  TraceInfo trace_info;
-  auto stream_status = StreamStatus{
-      .stream_id = stream_id_,
-      .account = account_.name,
-      .supports = SUPPORTS,
-      .transport = Transport::TCP,
-      .protocol = Protocol::HTTP,
-      .encoding = {Encoding::JSON},
-      .priority = Priority::PRIMARY,
-      .connection_status = connection_status_,
-      .reason = reason,
-      .interface = (*connection_).get_interface(),
-      .authority = (*connection_).get_current_authority(),
-      .path = (*connection_).get_current_path(),
-      .proxy = (*connection_).get_proxy(),
-  };
-  log::info("stream_status={}"sv, stream_status);
-  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
-}
+// core::Download
 
-uint32_t OrderEntry::download(State state) {
+int32_t OrderEntry::download(Trace<State> const &event) {
+  auto &[trace_info, state] = event;
   switch (state) {
     using enum State;
     case UNDEFINED:
       assert(false);
       break;
     case POSITION_MODE:
-      (*this)(ConnectionStatus::DOWNLOADING, "position-mode"sv);
+      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "position-mode"sv);
       get_position_mode();
       return 1;
     case WALLET:
-      (*this)(ConnectionStatus::DOWNLOADING, "wallet"sv);
+      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "wallet"sv);
       get_wallet();
       return 1;
     case POSITIONS:
-      (*this)(ConnectionStatus::DOWNLOADING, "positions"sv);
+      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "positions"sv);
       get_positions();
       return 1;
     case OPEN_ORDERS:
-      (*this)(ConnectionStatus::DOWNLOADING, "open-orders"sv);
+      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "open-orders"sv);
       get_open_orders();
       return 1;
     case FILL_HISTORY:
       if (shared_.settings.rest.download_fills_begin.count()) {
-        (*this)(ConnectionStatus::DOWNLOADING, "fill-history"sv);
+        create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "fill-history"sv);
         // get_fill_history();
         // return 1;
         return 0;
@@ -282,7 +291,7 @@ uint32_t OrderEntry::download(State state) {
         return 0;
       }
     case DONE:
-      (*this)(ConnectionStatus::READY);
+      create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
       return 0;
   }
   assert(false);
@@ -327,9 +336,8 @@ void OrderEntry::get_position_mode_ack(Trace<web::rest::Response> const &event, 
         log::info("Download state={} has already been processed"sv, state);
       } else {
         protocol::json::GetPositionModeAck position_mode_ack{body, decode_buffer_};
-        Trace event{trace_info, position_mode_ack};
-        (*this)(event);
-        download_.check(state);
+        create_trace_and_dispatch_2(trace_info, position_mode_ack);
+        download_.check(trace_info, state);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -379,9 +387,8 @@ void OrderEntry::get_wallet_ack(Trace<web::rest::Response> const &event, uint32_
         log::info("Download state={} has already been processed"sv, state);
       } else {
         protocol::json::GetWalletAck wallet_ack{body, decode_buffer_};
-        Trace event{trace_info, wallet_ack};
-        (*this)(event);
-        download_.check(state);
+        create_trace_and_dispatch_2(trace_info, wallet_ack);
+        download_.check(trace_info, state);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -431,9 +438,8 @@ void OrderEntry::get_positions_ack(Trace<web::rest::Response> const &event, uint
         log::info("Download state={} has already been processed"sv, state);
       } else {
         protocol::json::GetPositionsAck positions_ack{body, decode_buffer_};
-        Trace event{trace_info, positions_ack};
-        (*this)(event);
-        download_.check(state);
+        create_trace_and_dispatch_2(trace_info, positions_ack);
+        download_.check(trace_info, state);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -528,9 +534,8 @@ void OrderEntry::get_open_orders_ack(Trace<web::rest::Response> const &event, ui
         log::info("Download state={} has already been processed"sv, state);
       } else {
         protocol::json::GetOpenOrdersAck open_orders_ack{body, decode_buffer_};
-        Trace event{trace_info, open_orders_ack};
-        (*this)(event);
-        download_.check(state);
+        create_trace_and_dispatch_2(trace_info, open_orders_ack);
+        download_.check(trace_info, state);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -627,9 +632,8 @@ void OrderEntry::get_fill_history_ack(Trace<web::rest::Response> const &event, u
       } else {
         protocol::json::FillHistory fill_history{body, decode_buffer_};
         if (fill_history.code == 0) {
-          Trace event{trace_info, fill_history};
-          (*this)(event);
-          download_.check(state);
+        create_trace_and_dispatch_2(trace_info,  fill_history);
+          download_.check(trace_info,state);
         } else {
           handle_error(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(fill_history.code), fill_history.msg);
         }
@@ -792,8 +796,7 @@ void OrderEntry::create_order_ack(Trace<web::rest::Response> const &event, uint8
         handle_error(Origin::GATEWAY, RequestStatus::REJECTED, Error::UNKNOWN, item.message);
       }
       if (failed < std::size(place_order_ack.data)) {
-        Trace event_2{event, place_order_ack};
-        (*this)(event_2, user_id, order_id, version);
+        create_trace_and_dispatch_2(trace_info, place_order_ack, user_id, order_id, version);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -877,8 +880,7 @@ void OrderEntry::amend_order_ack(Trace<web::rest::Response> const &event, uint8_
         handle_error(Origin::GATEWAY, RequestStatus::REJECTED, Error::UNKNOWN, item.message);
       }
       if (failed < std::size(modify_order_ack.data)) {
-        Trace event_2{event, modify_order_ack};
-        (*this)(event_2, user_id, order_id, version);
+        create_trace_and_dispatch_2(trace_info, modify_order_ack, user_id, order_id, version);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -963,8 +965,7 @@ void OrderEntry::cancel_order_ack(Trace<web::rest::Response> const &event, uint8
         handle_error(Origin::GATEWAY, RequestStatus::REJECTED, Error::UNKNOWN, item.message);
       }
       if (failed < std::size(cancel_order_ack.data)) {
-        Trace event_2{event, cancel_order_ack};
-        (*this)(event_2, user_id, order_id, version);
+        create_trace_and_dispatch_2(trace_info, cancel_order_ack, user_id, order_id, version);
       }
     };
     process_response(event, handle_error, handle_success);
@@ -1020,6 +1021,7 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
 
 void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, std::string_view const &request_id) {
   profile_.cancel_all_orders_ack([&]() {
+    auto &[trace_info, response] = event;
     auto handle_error = [&](auto origin, auto status, auto error, auto const &text) {
       log::warn(R"(DEBUG origin={}, error={}, status={}, text="{}")"sv, origin, error, status, text);
       auto cancel_all_orders_ack = CancelAllOrdersAck{
@@ -1040,13 +1042,11 @@ void OrderEntry::cancel_all_orders_ack(Trace<web::rest::Response> const &event, 
           .user = {},
           .strategy_id = {},
       };
-      TraceInfo trace_info;
       create_trace_and_dispatch(shared_.dispatcher, trace_info, cancel_all_orders_ack);
     };
     auto handle_success = [&](auto &body) {
       protocol::json::CancelAllOrdersAck cancel_all_orders_ack{body, decode_buffer_};
-      Trace event_2{event, cancel_all_orders_ack};
-      (*this)(event_2, request_id);
+      create_trace_and_dispatch_2(trace_info, cancel_all_orders_ack, request_id);
     };
     process_response(event, handle_error, handle_success);
   });
