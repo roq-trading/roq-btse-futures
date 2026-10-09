@@ -315,11 +315,8 @@ void OrderEntry::get_position_mode() {
         .quality_of_service = {},
     };
     auto sequence = download_.sequence();
-    (*connection_)("position-mode"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      get_position_mode_ack(event, sequence);
-    });
+    auto callback = [this, sequence](auto &event, [[maybe_unused]] auto &request_id) { get_position_mode_ack(event, sequence); };
+    (*connection_)(request, callback, "position-mode"sv);
   });
 }
 
@@ -366,11 +363,8 @@ void OrderEntry::get_wallet() {
         .quality_of_service = {},
     };
     auto sequence = download_.sequence();
-    (*connection_)("wallet"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      get_wallet_ack(event, sequence);
-    });
+    auto callback = [this, sequence](auto &event, [[maybe_unused]] auto &request_id) { get_wallet_ack(event, sequence); };
+    (*connection_)(request, callback, "wallet"sv);
   });
 }
 
@@ -417,11 +411,8 @@ void OrderEntry::get_positions() {
         .quality_of_service = {},
     };
     auto sequence = download_.sequence();
-    (*connection_)("positions"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      get_positions_ack(event, sequence);
-    });
+    auto callback = [this, sequence](auto &event, [[maybe_unused]] auto &request_id) { get_positions_ack(event, sequence); };
+    (*connection_)(request, callback, "positions"sv);
   });
 }
 
@@ -513,11 +504,8 @@ void OrderEntry::get_open_orders() {
         .quality_of_service = {},
     };
     auto sequence = download_.sequence();
-    (*connection_)("open_orders"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      get_open_orders_ack(event, sequence);
-    });
+    auto callback = [this, sequence](auto &event, [[maybe_unused]] auto &request_id) { get_open_orders_ack(event, sequence); };
+    (*connection_)(request, callback, "open_orders"sv);
   });
 }
 
@@ -610,11 +598,8 @@ void OrderEntry::get_fill_history() {
         .quality_of_service = {},
     };
     auto sequence = download_.sequence();
-    (*connection_)("fill_history"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      get_fill_history_ack(event, sequence);
-    });
+    auto callback= [this, sequence](auto&event,[[maybe_unused]] auto &request_id){ get_fill_history_ack(event, sequence); };
+    (*connection_)(request,callback,"fill_history"sv);
   });
 }
 
@@ -755,13 +740,11 @@ void OrderEntry::create_order(
         .body = body,
         .quality_of_service = {},
     };
-    auto callback = [this, user_id = message_info.source, order_id = create_order.order_id]([[maybe_unused]] auto &request_id, auto &response) {
+    auto callback = [this, user_id = message_info.source, order_id = create_order.order_id](auto &event, [[maybe_unused]] auto &request_id) {
       uint32_t version = 1;
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
       create_order_ack(event, user_id, order_id, version);
     };
-    (*connection_)(request_id, request, callback);
+    (*connection_)(request, callback, request_id);
   });
 }
 
@@ -840,12 +823,8 @@ void OrderEntry::amend_order(
         .quality_of_service = {},
     };
     auto callback = [this, user_id = message_info.source, order_id = modify_order.order_id, version = modify_order.version](
-                        [[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      amend_order_ack(event, user_id, order_id, version);
-    };
-    (*connection_)(request_id, request, callback);
+                        auto &event, [[maybe_unused]] auto &request_id) { amend_order_ack(event, user_id, order_id, version); };
+    (*connection_)(request, callback, request_id);
   });
 }
 
@@ -925,12 +904,8 @@ void OrderEntry::cancel_order(
         .quality_of_service = {},
     };
     auto callback = [this, user_id = message_info.source, order_id = cancel_order.order_id, version = cancel_order.version](
-                        [[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      cancel_order_ack(event, user_id, order_id, version);
-    };
-    (*connection_)(request_id, request, callback);
+                        auto &event, [[maybe_unused]] auto &request_id) { cancel_order_ack(event, user_id, order_id, version); };
+    (*connection_)(request, callback, request_id);
   });
 }
 
@@ -1005,12 +980,8 @@ void OrderEntry::cancel_all_orders(Event<CancelAllOrders> const &event, std::str
           .body = {},
           .quality_of_service = {},
       };
-      auto callback = [this](auto &request_id, auto &response) {
-        TraceInfo trace_info;
-        Trace event{trace_info, response};
-        cancel_all_orders_ack(event, request_id);
-      };
-      (*connection_)(request_id, request, callback);
+      auto callback = [this](auto &event, auto &request_id) { cancel_all_orders_ack(event, request_id); };
+      (*connection_)(request, callback, request_id);
     };
     if (shared_.dispatcher.get_all_order_symbols(helper, account_.name)) {
     } else {
@@ -1075,12 +1046,8 @@ void OrderEntry::cancel_all_after() {
         .body = body,
         .quality_of_service = {},
     };
-    auto callback = [this]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      cancel_all_after_ack(event);
-    };
-    (*connection_)("cancel-all-after"sv, request, callback);
+    auto callback = [this](auto &event, [[maybe_unused]] auto &request_id) { cancel_all_after_ack(event); };
+    (*connection_)(request, callback, "cancel-all-after"sv);
   });
 }
 

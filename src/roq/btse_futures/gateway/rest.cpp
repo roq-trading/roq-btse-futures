@@ -205,11 +205,8 @@ void Rest::get_market_summary() {
         .quality_of_service = {},
     };
     auto sequence = download_.sequence();
-    (*connection_)("market_summary"sv, request, [this, sequence]([[maybe_unused]] auto &request_id, auto &response) {
-      TraceInfo trace_info;
-      Trace event{trace_info, response};
-      get_market_summary_ack(event, sequence);
-    });
+    auto callback = [this, sequence](auto &event, [[maybe_unused]] auto &request_id) { get_market_summary_ack(event, sequence); };
+    (*connection_)(request, callback, "market_summary"sv);
   });
 }
 
