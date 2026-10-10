@@ -90,21 +90,23 @@ OrderBook::OrderBook(Handler &handler, io::Context &context, uint16_t stream_id,
       shared_{shared} {
 }
 
-void OrderBook::operator()(Event<Start> const &) {
+// server::Stream
+
+void OrderBook::operator()(Trace<Start> const &) {
   (*connection_).start();
 }
 
-void OrderBook::operator()(Event<Stop> const &) {
+void OrderBook::operator()(Trace<Stop> const &) {
   (*connection_).stop();
 }
 
-void OrderBook::operator()(Event<Timer> const &event) {
-  auto now = event.value.now;
-  (*connection_).refresh(now);
+void OrderBook::operator()(Trace<Timer> const &event) {
+  auto &[trace_info, timer] = event;
+  (*connection_).refresh(timer.now);
   if (ready()) {
-    if (next_ping_ < now) {
-      next_ping_ = now + shared_.settings.ws.ping_freq;
-      ping(now);
+    if (next_ping_ < timer.now) {
+      next_ping_ = timer.now + shared_.settings.ws.ping_freq;
+      ping(timer.now);
     }
   }
 }
@@ -121,6 +123,30 @@ void OrderBook::operator()(metrics::Writer &writer) const {
       .write(latency_.ping, metrics::Type::LATENCY);
 }
 
+void OrderBook::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {
+  auto &[trace_info, connection_status] = event;
+  connection_status_ = connection_status;
+  auto stream_status = StreamStatus{
+      .stream_id = stream_id_,
+      .account = {},
+      .supports = SUPPORTS,
+      .transport = Transport::TCP,
+      .protocol = Protocol::WS,
+      .encoding = {Encoding::JSON},
+      .priority = Priority::PRIMARY,
+      .connection_status = connection_status_,
+      .reason = reason,
+      .interface = (*connection_).get_interface(),
+      .authority = (*connection_).get_current_authority(),
+      .path = (*connection_).get_current_path(),
+      .proxy = (*connection_).get_proxy(),
+  };
+  log::info("stream_status={}"sv, stream_status);
+  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+}
+
+// server::MarketDataStream
+
 void OrderBook::subscribe(size_t start_from) {
   if (ready()) {
     subscribe(shared_.symbols.get_slice(index_, start_from));
@@ -132,13 +158,15 @@ void OrderBook::subscribe(size_t start_from) {
 void OrderBook::operator()(Trace<web::socket::Connected> const &) {
 }
 
-void OrderBook::operator()(Trace<web::socket::Disconnected> const &) {
+void OrderBook::operator()(Trace<web::socket::Disconnected> const &event) {
+  auto &[trace_info, disconnected] = event;
   ++counter_.disconnect;
-  (*this)(ConnectionStatus::DISCONNECTED);
+  create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
 }
 
-void OrderBook::operator()(Trace<web::socket::Ready> const &) {
-  (*this)(ConnectionStatus::READY);
+void OrderBook::operator()(Trace<web::socket::Ready> const &event) {
+  auto &[trace_info, ready] = event;
+  create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
   subscribe();
 }
 
@@ -163,28 +191,6 @@ void OrderBook::operator()(Trace<web::socket::Text> const &event) {
 
 void OrderBook::operator()(Trace<web::socket::Binary> const &) {
   log::fatal("Unexpected"sv);
-}
-
-void OrderBook::operator()(ConnectionStatus connection_status, std::string_view const &reason) {
-  connection_status_ = connection_status;
-  TraceInfo trace_info;
-  auto stream_status = StreamStatus{
-      .stream_id = stream_id_,
-      .account = {},
-      .supports = SUPPORTS,
-      .transport = Transport::TCP,
-      .protocol = Protocol::WS,
-      .encoding = {Encoding::JSON},
-      .priority = Priority::PRIMARY,
-      .connection_status = connection_status_,
-      .reason = reason,
-      .interface = (*connection_).get_interface(),
-      .authority = (*connection_).get_current_authority(),
-      .path = (*connection_).get_current_path(),
-      .proxy = (*connection_).get_proxy(),
-  };
-  log::info("stream_status={}"sv, stream_status);
-  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
 }
 
 void OrderBook::ping([[maybe_unused]] std::chrono::nanoseconds now) {

@@ -20,6 +20,8 @@
 
 #include "roq/server.hpp"
 
+#include "roq/server/stream.hpp"
+
 #include "roq/btse_futures/gateway/shared.hpp"
 
 #include "roq/btse_futures/protocol/json/parser.hpp"
@@ -28,24 +30,31 @@ namespace roq {
 namespace btse_futures {
 namespace gateway {
 
-struct OrderBook final : public web::socket::Client::Handler, public protocol::json::Parser::Handler {
+struct OrderBook final : public Base<OrderBook>, public server::MarketDataStream, public web::socket::Client::Handler, public protocol::json::Parser::Handler {
   struct Handler {};
 
   OrderBook(Handler &, io::Context &, uint16_t stream_id, Shared &, size_t index);
 
-  OrderBook(OrderBook const &) = delete;
+  // protected:
+  friend base_type;
 
-  uint16_t stream_id() const { return stream_id_; }
+  // server::Stream
 
-  bool ready() const { return connection_status_ == ConnectionStatus::READY; }
+  uint16_t stream_id() const override { return stream_id_; }
 
-  void operator()(Event<Start> const &);
-  void operator()(Event<Stop> const &);
-  void operator()(Event<Timer> const &);
+  bool ready() const override { return connection_status_ == ConnectionStatus::READY; }
 
-  void operator()(metrics::Writer &) const;
+  void operator()(Trace<Start> const &) override;
+  void operator()(Trace<Stop> const &) override;
+  void operator()(Trace<Timer> const &) override;
 
-  void subscribe(size_t start_from = 0);
+  void operator()(metrics::Writer &) const override;
+
+  void operator()(Trace<ConnectionStatus> const &, std::string_view const &reason = {}) override;
+
+  // server::MarketDataStream
+
+  void subscribe(size_t start_from = 0) override;
 
  protected:
   // web::socket::Client::Handler
@@ -57,17 +66,6 @@ struct OrderBook final : public web::socket::Client::Handler, public protocol::j
   void operator()(Trace<web::socket::Latency> const &) override;
   void operator()(Trace<web::socket::Text> const &) override;
   void operator()(Trace<web::socket::Binary> const &) override;
-
- private:
-  void operator()(ConnectionStatus, std::string_view const &reason = {});
-
-  void ping(std::chrono::nanoseconds now);
-
-  void subscribe(std::span<Symbol const> const &symbols);
-  void subscribe(std::span<Symbol const> const &symbols, std::string_view const &channel);
-  void subscribe(std::span<Symbol const> const &symbols, std::string_view const &channel, uint32_t group);
-
-  void parse(std::string_view const &message);
 
   // protocol::json::Parser::Handler
 
@@ -84,6 +82,16 @@ struct OrderBook final : public web::socket::Client::Handler, public protocol::j
   void operator()(Trace<protocol::json::AllPosition> const &) override;
   void operator()(Trace<protocol::json::Notification> const &) override;
   void operator()(Trace<protocol::json::Fills> const &) override;
+
+  // helpers
+
+  void ping(std::chrono::nanoseconds now);
+
+  void subscribe(std::span<Symbol const> const &symbols);
+  void subscribe(std::span<Symbol const> const &symbols, std::string_view const &channel);
+  void subscribe(std::span<Symbol const> const &symbols, std::string_view const &channel, uint32_t group);
+
+  void parse(std::string_view const &message);
 
  private:
   [[maybe_unused]] Handler &handler_;
