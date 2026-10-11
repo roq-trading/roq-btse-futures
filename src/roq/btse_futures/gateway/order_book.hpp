@@ -91,7 +91,7 @@ struct OrderBook final : public Base<OrderBook>, public server::MarketDataStream
   void subscribe(std::span<Symbol const> const &symbols, std::string_view const &channel);
   void subscribe(std::span<Symbol const> const &symbols, std::string_view const &channel, uint32_t group);
 
-  void parse(std::string_view const &message);
+  void parse(TraceInfo const &, std::string_view const &message);
 
  private:
   [[maybe_unused]] Handler &handler_;
