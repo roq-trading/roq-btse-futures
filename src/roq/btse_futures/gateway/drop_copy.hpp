@@ -78,7 +78,7 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
 
   // helpers
 
-  void login();
+  void login(TraceInfo const &);
 
   void subscribe();
 

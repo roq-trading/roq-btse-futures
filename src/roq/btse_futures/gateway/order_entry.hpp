@@ -100,32 +100,32 @@ struct OrderEntry final : public Base<OrderEntry>, public server::OrderActionStr
 
   // position-mode
 
-  void get_position_mode();
+  void get_position_mode(TraceInfo const &);
   void get_position_mode_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::GetPositionModeAck> const &);
 
   // wallet
 
-  void get_wallet();
+  void get_wallet(TraceInfo const &);
   void get_wallet_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::GetWalletAck> const &);
 
   // positions
 
-  void get_positions();
+  void get_positions(TraceInfo const &);
   void get_positions_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::GetPositionsAck> const &);
 
   // open_orders
 
-  void get_open_orders();
+  void get_open_orders(TraceInfo const &);
   void get_open_orders_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::GetOpenOrdersAck> const &);
 
   /*
   // fill_history
 
-  void get_fill_history();
+  void get_fill_history(TraceInfo const &);
   void get_fill_history_ack(Trace<web::rest::Response> const &, uint32_t sequence);
   void operator()(Trace<protocol::json::FillHistory> const &);
   */
@@ -166,7 +166,7 @@ struct OrderEntry final : public Base<OrderEntry>, public server::OrderActionStr
 
   // cancel-all-after
 
-  void cancel_all_after();
+  void cancel_all_after(TraceInfo const &);
   void cancel_all_after_ack(Trace<web::rest::Response> const &);
   // void operator()(Trace<protocol::json::CancelAllOrdersAck> const &, uint8_t user_id);
 

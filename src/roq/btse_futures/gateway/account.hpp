@@ -20,11 +20,11 @@ struct Account final {
 
   Account(Account const &) = delete;
 
-  std::string create_ws_login(std::string_view const &path);
+  std::string create_ws_login(TraceInfo const &, std::string_view const &path);
 
-  std::string create_headers(std::string_view const &path) { return create_headers(path, {}); }
+  std::string create_headers(TraceInfo const &trace_info, std::string_view const &path) { return create_headers(trace_info, path, {}); }
 
-  std::string create_headers(std::string_view const &path, std::string_view const &body);
+  std::string create_headers(TraceInfo const &, std::string_view const &path, std::string_view const &body);
 
   std::string const name;
 

@@ -166,8 +166,9 @@ void DropCopy::operator()(Trace<web::socket::Disconnected> const &event) {
   next_ping_ = {};
 }
 
-void DropCopy::operator()(Trace<web::socket::Ready> const &) {
-  login();
+void DropCopy::operator()(Trace<web::socket::Ready> const &event) {
+  auto &[trace_info, ready] = event;
+  login(trace_info);
 }
 
 void DropCopy::operator()(Trace<web::socket::Close> const &event) {
@@ -394,8 +395,8 @@ void DropCopy::operator()(Trace<protocol::json::Fills> const &event) {
 
 // helpers
 
-void DropCopy::login() {
-  auto message = account_.create_ws_login("/ws/futures"sv);
+void DropCopy::login(TraceInfo const &trace_info) {
+  auto message = account_.create_ws_login(trace_info, "/ws/futures"sv);
   (*connection_).send_text(message);
 }
 
