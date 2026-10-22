@@ -97,6 +97,22 @@
     {
       "name": "minimumRequiredMargin",
       "type": "std/double"
+    },
+    {
+      "name": "closedPnl",
+      "type": "std/double"
+    },
+    {
+      "name": "realizedPnl",
+      "type": "std/double"
+    },
+    {
+      "name": "totalFundingFee",
+      "type": "std/double"
+    },
+    {
+      "name": "totalTradingFee",
+      "type": "std/double"
     }
   ]
 }
