@@ -25,10 +25,10 @@ namespace {
 auto const NAME = "ex"sv;
 
 auto const SUPPORTS = Mask{
-    SupportType::ORDER,
-    SupportType::TRADE,
     SupportType::FUNDS,
     SupportType::POSITION,
+    SupportType::ORDER,
+    SupportType::TRADE,
 };
 
 auto const PING = "ping"sv;
@@ -93,10 +93,6 @@ DropCopy::DropCopy(Handler &handler, io::Context &context, uint16_t stream_id, A
 
 // server::Stream
 
-bool DropCopy::ready() const {
-  return (*connection_).ready();
-}
-
 void DropCopy::operator()(Trace<Start> const &) {
   (*connection_).start();
 }
@@ -107,11 +103,12 @@ void DropCopy::operator()(Trace<Stop> const &) {
 
 void DropCopy::operator()(Trace<Timer> const &event) {
   auto &[trace_info, timer] = event;
-  (*connection_).refresh(timer.now);
-  if (ready()) {
-    if (next_ping_ < timer.now) {
-      next_ping_ = timer.now + shared_.settings.ws.ping_freq;
-      (*connection_).send_text(PING);
+  if ((*connection_).refresh(timer.now)) {
+    if (ready()) {
+      if (next_ping_ < timer.now) {
+        next_ping_ = timer.now + shared_.settings.ws.ping_freq;
+        (*connection_).send_text(PING);
+      }
     }
   }
 }
@@ -168,6 +165,7 @@ void DropCopy::operator()(Trace<web::socket::Disconnected> const &event) {
 
 void DropCopy::operator()(Trace<web::socket::Ready> const &event) {
   auto &[trace_info, ready] = event;
+  create_trace_and_dispatch_2(trace_info, ConnectionStatus::LOGIN_SENT);
   login(trace_info);
 }
 

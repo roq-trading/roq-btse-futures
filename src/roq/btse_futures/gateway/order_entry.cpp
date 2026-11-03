@@ -27,12 +27,12 @@ namespace {
 auto const NAME = "om"sv;
 
 auto const SUPPORTS = Mask{
+    SupportType::FUNDS,
+    SupportType::POSITION,
     SupportType::CREATE_ORDER,
     SupportType::MODIFY_ORDER,
     SupportType::CANCEL_ORDER,
     SupportType::ORDER_ACK,
-    SupportType::FUNDS,
-    SupportType::POSITION,
 };
 
 size_t const MAX_DECODE_BUFFER_DEPTH = 2;
@@ -130,13 +130,13 @@ void OrderEntry::operator()(Trace<Stop> const &) {
 
 void OrderEntry::operator()(Trace<Timer> const &event) {
   auto &[trace_info, timer] = event;
-  (*connection_).refresh(timer.now);
-  if (!ready()) {
-    return;
-  }
-  if (master_ && shared_.settings.rest.cancel_on_disconnect && next_heartbeat_ < timer.now) {
-    next_heartbeat_ = timer.now + (shared_.settings.rest.ping_freq / 3);
-    cancel_all_after(trace_info);
+  if ((*connection_).refresh(timer.now)) {
+    if (ready()) {
+      if (master_ && shared_.settings.rest.cancel_on_disconnect && next_heartbeat_ < timer.now) {
+        next_heartbeat_ = timer.now + (shared_.settings.rest.ping_freq / 3);
+        cancel_all_after(trace_info);
+      }
+    }
   }
 }
 
@@ -260,30 +260,31 @@ void OrderEntry::operator()(Trace<web::rest::Latency> const &event) {
 
 int32_t OrderEntry::download(Trace<State> const &event) {
   auto &[trace_info, state] = event;
+  auto publish_downloading = [&]() { create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, magic_enum::enum_name(state)); };
   switch (state) {
     using enum State;
     case UNDEFINED:
       assert(false);
       break;
     case POSITION_MODE:
-      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "position-mode"sv);
+      publish_downloading();
       get_position_mode(trace_info);
       return 1;
     case WALLET:
-      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "wallet"sv);
+      publish_downloading();
       get_wallet(trace_info);
       return 1;
     case POSITIONS:
-      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "positions"sv);
+      publish_downloading();
       get_positions(trace_info);
       return 1;
     case OPEN_ORDERS:
-      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "open-orders"sv);
+      publish_downloading();
       get_open_orders(trace_info);
       return 1;
     case FILL_HISTORY:
       if (shared_.settings.rest.download_fills_begin.count()) {
-        create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "fill-history"sv);
+        publish_downloading();
         // get_fill_history(trace_info);
         // return 1;
         return 0;

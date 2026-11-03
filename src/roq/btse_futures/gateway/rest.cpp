@@ -102,7 +102,10 @@ void Rest::operator()(Trace<Stop> const &) {
 
 void Rest::operator()(Trace<Timer> const &event) {
   auto &[trace_info, timer] = event;
-  (*connection_).refresh(timer.now);
+  if ((*connection_).refresh(timer.now)) {
+    if (ready()) {
+    }
+  }
 }
 
 void Rest::operator()(metrics::Writer &writer) const {
@@ -173,13 +176,14 @@ void Rest::operator()(Trace<web::rest::Latency> const &event) {
 
 int32_t Rest::download(Trace<State> const &event) {
   auto &[trace_info, state] = event;
+  auto publish_downloading = [&]() { create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, magic_enum::enum_name(state)); };
   switch (state) {
     using enum State;
     case UNDEFINED:
       assert(false);
       break;
     case MARKET_SUMMARY:
-      create_trace_and_dispatch_2(trace_info, ConnectionStatus::DOWNLOADING, "market-summary"sv);
+      publish_downloading();
       get_market_summary();
       return 1;
     case DONE:
@@ -340,8 +344,7 @@ void Rest::process_response(Trace<web::rest::Response> const &event, auto error_
             assert(false);
             [[fallthrough]];
           default: {
-            // protocol::json::Message error{body};
-            // XXX HANS error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(error.code), error.msg);
+            error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, Error::UNKNOWN, ""sv);
           }
         }
         break;

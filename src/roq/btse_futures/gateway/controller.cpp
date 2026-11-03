@@ -21,8 +21,9 @@ template <typename R>
 R create_accounts(auto &config) {
   using value_type = std::remove_cvref_t<R>;
   value_type result;
-  for (auto &[_, iter] : config.accounts) {
-    result.try_emplace(static_cast<std::string_view>(iter.name), std::make_unique<Account>(config, iter.name));
+  for (auto &[_, account] : config.accounts) {
+    auto obj = std::make_unique<Account>(config, account.name);
+    result.try_emplace(account.name, std::move(obj));
   }
   return result;
 }
@@ -34,13 +35,15 @@ R create_order_entry(auto &gateway, auto &context, auto &stream_id, auto &accoun
   if (!shared.settings.misc.number_of_order_entry_connections) {
     log::fatal("Unexpected: --number_of_order_entry_connections={}"sv, shared.settings.misc.number_of_order_entry_connections);
   }
-  for (auto &[name, account] : accounts) {
+  for (auto &[_, item] : accounts) {
+    auto &account = *item;
     std::vector<std::unique_ptr<OrderEntry>> order_entry;
     for (size_t i = 0; i < shared.settings.misc.number_of_order_entry_connections; ++i) {
       auto master = i == 0;
-      order_entry.emplace_back(std::make_unique<OrderEntry>(gateway, context, ++stream_id, *account, shared, master));
+      auto obj = std::make_unique<OrderEntry>(gateway, context, ++stream_id, account, shared, master);
+      order_entry.emplace_back(std::move(obj));
     }
-    result.try_emplace(static_cast<std::string_view>(name), std::move(order_entry));
+    result.try_emplace(account.name, std::move(order_entry));
   }
   return result;
 }
@@ -48,8 +51,10 @@ R create_order_entry(auto &gateway, auto &context, auto &stream_id, auto &accoun
 template <typename R>
 R create_drop_copy(auto &gateway, auto &context, auto &stream_id, auto &accounts, auto &shared) {
   R result;
-  for (auto &[name, account] : accounts) {
-    result.try_emplace(static_cast<std::string_view>(name), std::make_unique<DropCopy>(gateway, context, ++stream_id, *account, shared));
+  for (auto &[_, item] : accounts) {
+    auto &account = *item;
+    auto obj = std::make_unique<DropCopy>(gateway, context, ++stream_id, account, shared);
+    result.try_emplace(account.name, std::move(obj));
   }
   return result;
 }
@@ -193,17 +198,17 @@ void Controller::operator()(Trace<SymbolsUpdate> const &event) {
 void Controller::ensure_symbol_slices(TraceInfo const &trace_info, size_t size) {
   while (std::size(market_data_) < size) {
     log::debug("Create market-data (stream)"sv);
-    auto market_data = std::make_unique<MarketData>(*this, context_, ++stream_id_, shared_, std::size(market_data_));
+    auto obj = std::make_unique<MarketData>(*this, context_, ++stream_id_, shared_, std::size(market_data_));
     Start start;
-    create_trace_and_dispatch(*market_data, trace_info, start);
-    market_data_.emplace_back(std::move(market_data));
+    create_trace_and_dispatch(*obj, trace_info, start);
+    market_data_.emplace_back(std::move(obj));
   }
   while (std::size(order_book_) < size) {
     log::debug("Create order-book (stream)"sv);
-    auto order_book = std::make_unique<OrderBook>(*this, context_, ++stream_id_, shared_, std::size(order_book_));
+    auto obj = std::make_unique<OrderBook>(*this, context_, ++stream_id_, shared_, std::size(order_book_));
     Start start;
-    create_trace_and_dispatch(*order_book, trace_info, start);
-    order_book_.emplace_back(std::move(order_book));
+    create_trace_and_dispatch(*obj, trace_info, start);
+    order_book_.emplace_back(std::move(obj));
   }
 }
 
