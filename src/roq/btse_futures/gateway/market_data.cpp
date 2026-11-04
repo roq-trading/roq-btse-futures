@@ -99,11 +99,11 @@ void MarketData::operator()(Trace<Stop> const &) {
 
 void MarketData::operator()(Trace<Timer> const &event) {
   auto &[trace_info, timer] = event;
-  if ((*connection_).refresh(timer.now)) {
+  if ((*connection_).refresh(trace_info)) {
     if (ready()) {
-      if (next_ping_ < timer.now) {
-        next_ping_ = timer.now + shared_.settings.ws.ping_freq;
-        ping(timer.now);
+      if (next_ping_ < trace_info.origin_create_time) {
+        next_ping_ = trace_info.origin_create_time + shared_.settings.ws.ping_freq;
+        ping(trace_info.origin_create_time);
       }
     }
   }
