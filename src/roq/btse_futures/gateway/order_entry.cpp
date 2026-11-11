@@ -1098,7 +1098,8 @@ void OrderEntry::process_response(Trace<web::rest::Response> const &event, auto 
               error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, Error::UNKNOWN, message);
             } else {
               protocol::json::Error error{body};
-              error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, protocol::json::guess_error(error.error_code), error.message);
+              auto error_2 = map(error.error_code).template get<Error>();
+              error_handler(Origin::EXCHANGE, RequestStatus::REJECTED, error_2, error.message);
             }
         }
         break;

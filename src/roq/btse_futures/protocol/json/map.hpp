@@ -22,6 +22,10 @@ namespace roq {
 
 template <>
 template <>
+std::optional<Error> Map<int32_t>::helper() const;
+
+template <>
+template <>
 std::optional<OrderStatus> Map<int32_t>::helper() const;
 
 template <>
