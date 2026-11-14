@@ -97,6 +97,10 @@
     {
       "name": "time_in_force",
       "type": "roq/btse_futures/protocol/json/TimeInForce"
+    },
+    {
+      "name": "originalOrderId",
+      "type": "std/string_view"
     }
   ]
 }
