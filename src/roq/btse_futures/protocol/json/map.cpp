@@ -38,8 +38,8 @@ constexpr Helper<int32_t>::operator std::optional<roq::Error>() const {
       return Error::INSUFFICIENT_FUNDS;
     case 25'203:  // Insufficient margin
       return Error::INSUFFICIENT_FUNDS;
-    case 33'199'119:  // UNDOC / REPORTED BY PLEASE REPORT
-      return Error::UNKNOWN;
+    case 33'199'119:  // [UNDOC] Reduce only order exceeds potential position of...
+      return Error::REDUCE_ONLY_WOULD_INCREASE;
   }
   LOG_ONCE("error_code"sv, value);
   return Error::UNKNOWN;

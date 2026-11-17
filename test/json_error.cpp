@@ -97,3 +97,23 @@ TEST_CASE("unknown_cl_ord_id", "[json_error]") {
   value_type obj{message, buffers};
   helper(obj);
 }
+
+TEST_CASE("reduce_on_would_increase", "[json_error]") {
+  auto message = R"({)"
+                 R"("status":400,)"
+                 R"("errorCode":33199119,)"
+                 R"("message":"Reduce only order exceeds potential position of 0.26711 BTC",)"
+                 R"("extraData":[)"
+                 R"("0.26711",)"
+                 R"("BTC")"
+                 R"(])"
+                 R"(})";
+  auto helper = [&](value_type &obj) {
+    CHECK(obj.status == 400);
+    CHECK(obj.error_code == 33199119);
+    CHECK(obj.message == "Reduce only order exceeds potential position of 0.26711 BTC"sv);
+  };
+  core::json::BufferStack buffers{8192, 1};
+  value_type obj{message, buffers};
+  helper(obj);
+}
