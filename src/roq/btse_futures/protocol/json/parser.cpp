@@ -54,7 +54,7 @@ auto extract_topic(std::string_view const &topic) {
 // === IMPLEMENTATION ===
 
 bool Parser::dispatch(
-    Handler &handler, std::string_view const &message, core::json::BufferStack &buffer_stack, TraceInfo const &trace_info, bool allow_unknown_event_types) {
+    Handler &handler, std::string_view const &message, core::json::BufferStack &buffer_stack, TraceInfo const &trace_info, bool disable_strict_parsing) {
   if (message == PONG) [[unlikely]] {
     Pong pong;
     create_trace_and_dispatch(handler, trace_info, pong);
@@ -118,7 +118,7 @@ bool Parser::dispatch(
     return result;
   };
   core::json::Parser::dispatch<core::json::Object>(helper, message);
-  if (result || allow_unknown_event_types) {
+  if (result || disable_strict_parsing) {
     return result;
   }
   log::fatal(R"(Unexpected: message="{}")"sv, message);

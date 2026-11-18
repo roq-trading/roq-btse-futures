@@ -132,7 +132,7 @@ void OrderEntry::operator()(Trace<Timer> const &event) {
   auto &[trace_info, timer] = event;
   if ((*connection_).refresh(trace_info)) {
     if (ready()) {
-      if (master_ && shared_.settings.rest.cancel_on_disconnect && next_heartbeat_ < timer.now) {
+      if (master_ && !shared_.settings.app.disable_cancel_on_disconnect && next_heartbeat_ < timer.now) {
         next_heartbeat_ = timer.now + (shared_.settings.rest.ping_freq / 3);
         cancel_all_after(trace_info);
       }
@@ -296,7 +296,7 @@ int32_t OrderEntry::download(Trace<State> const &event) {
       get_open_orders(trace_info);
       return 1;
     case FILL_HISTORY:
-      if (shared_.settings.rest.download_fills_begin.count()) {
+      if (shared_.settings.download.trades_lookback.count()) {
         publish_downloading();
         // get_fill_history(trace_info);
         // return 1;
