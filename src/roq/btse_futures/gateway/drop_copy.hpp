@@ -88,14 +88,12 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
 
  private:
   [[maybe_unused]] Handler &handler_;
-  // config
+  //
   uint16_t const stream_id_;
   std::string const name_;
-  // web socket
-  std::unique_ptr<web::socket::Client> connection_;
-  // buffers
+  std::unique_ptr<web::socket::Client> const connection_;
+  //
   core::json::BufferStack decode_buffer_;
-  // metrics
   struct {
     utils::metrics::Counter disconnect;
   } counter_;
@@ -105,12 +103,8 @@ struct DropCopy final : public Base<DropCopy>, public server::Stream, public web
   struct {
     utils::metrics::Latency ping, heartbeat;
   } latency_;
-  // account
   Account &account_;
-  // cache
   Shared &shared_;
-  // state
-  bool ready_ = false;
   ConnectionStatus connection_status_ = {};
   std::chrono::nanoseconds logon_timeout_ = {};
   std::chrono::nanoseconds next_ping_ = {};

@@ -158,7 +158,6 @@ void DropCopy::operator()(Trace<web::socket::Connected> const &event) {
 void DropCopy::operator()(Trace<web::socket::Disconnected> const &event) {
   auto &[trace_info, disconnected] = event;
   ++counter_.disconnect;
-  ready_ = false;
   create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
   logon_timeout_ = {};
   next_ping_ = {};
@@ -220,7 +219,6 @@ void DropCopy::operator()(Trace<protocol::json::Login> const &event) {
   log::info<2>("login={}"sv, login);
   if (login.success) {
     subscribe();
-    ready_ = true;
     create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
   } else {
     if (shared_.settings.app.disable_strict_logon) {

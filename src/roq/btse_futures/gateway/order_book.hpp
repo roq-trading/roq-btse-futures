@@ -95,15 +95,13 @@ struct OrderBook final : public Base<OrderBook>, public server::MarketDataStream
 
  private:
   [[maybe_unused]] Handler &handler_;
-  // config
+  //
   uint16_t const stream_id_;
   std::string const name_;
   size_t const index_;
-  // web socket
-  std::unique_ptr<web::socket::Client> connection_;
-  // buffers
+  std::unique_ptr<web::socket::Client> const connection_;
+  //
   core::json::BufferStack decode_buffer_;
-  // metrics
   struct {
     utils::metrics::Counter disconnect;
   } counter_;
@@ -113,9 +111,7 @@ struct OrderBook final : public Base<OrderBook>, public server::MarketDataStream
   struct {
     utils::metrics::Latency ping;
   } latency_;
-  // cache
   Shared &shared_;
-  // state
   ConnectionStatus connection_status_ = {};
   std::chrono::nanoseconds next_ping_ = {};
 };
