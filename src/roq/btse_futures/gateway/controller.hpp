@@ -103,33 +103,26 @@ struct Controller final : public Base<Controller>,
   struct OrderEntryRR final {
     OrderEntryRR(std::vector<std::unique_ptr<OrderEntry>> &&);
 
-    template <typename... Args>
-    void operator()(Args &&...);
+    server::OrderActionStream &get_next();
 
-    template <typename... Args>
-    void operator()(Args &&...) const;
-
-    OrderEntry &get_next();
+    std::vector<std::unique_ptr<OrderEntry>> order_entry;
 
    private:
-    std::vector<std::unique_ptr<OrderEntry>> order_entry_;
     size_t index_ = {};
   };
 
  private:
   server::Dispatcher &dispatcher_;
-  // config
+  //
   std::string const master_account_;
-  // accounts
-  utils::unordered_map<std::string, std::unique_ptr<Account>> const accounts_;
-  // io
+  //
   io::Context &context_;
-  // shared
   Shared shared_;
-  // seed
   uint16_t stream_id_ = {};
-  // streams
-  Rest rest_;
+  //
+  utils::unordered_map<std::string, std::unique_ptr<Account>> const accounts_;
+  //
+  std::unique_ptr<Rest> rest_;
   utils::unordered_map<std::string, OrderEntryRR> order_entry_;
   utils::unordered_map<std::string, std::unique_ptr<DropCopy>> drop_copy_;
   std::vector<std::unique_ptr<MarketData>> market_data_;
