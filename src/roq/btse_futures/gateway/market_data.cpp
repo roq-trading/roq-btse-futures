@@ -72,7 +72,7 @@ struct create_metrics final : public utils::metrics::Factory {
 // === IMPLEMENTATION ===
 
 MarketData::MarketData(Handler &handler, io::Context &context, uint16_t stream_id, Shared &shared, size_t index)
-    : handler_{handler}, stream_id_{stream_id}, name_{create_name(stream_id_)}, index_{index},
+    : server::MarketDataStream{stream_id}, handler_{handler}, name_{create_name(stream_id)}, index_{index},
       connection_{create_connection(*this, shared.settings, context, shared)}, decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
@@ -122,25 +122,26 @@ void MarketData::operator()(metrics::Writer &writer) const {
 
 void MarketData::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {
   auto &[trace_info, connection_status] = event;
-  connection_status_ = connection_status;
-  auto stream_status = StreamStatus{
-      .stream_id = stream_id_,
-      .account = {},
-      .supports = SUPPORTS,
-      .transport = Transport::TCP,
-      .protocol = Protocol::WS,
-      .encoding = {Encoding::JSON},
-      .priority = Priority::PRIMARY,
-      .connection_status = connection_status_,
-      .reason = reason,
-      .interface = (*connection_).get_interface(),
-      .proxy = (*connection_).get_proxy(),
-      .peer = (*connection_).get_current_peer(),
-      .authority = (*connection_).get_current_authority(),
-      .path = (*connection_).get_current_path(),
-  };
-  log::info("stream_status={}"sv, stream_status);
-  create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+  if (update(connection_status, reason)) {
+    auto stream_status = StreamStatus{
+        .stream_id = stream_id(),
+        .account = {},
+        .supports = SUPPORTS,
+        .transport = Transport::TCP,
+        .protocol = Protocol::WS,
+        .encoding = {Encoding::JSON},
+        .priority = Priority::PRIMARY,
+        .connection_status = connection_status,
+        .reason = reason,
+        .interface = (*connection_).get_interface(),
+        .proxy = (*connection_).get_proxy(),
+        .peer = (*connection_).get_current_peer(),
+        .authority = (*connection_).get_current_authority(),
+        .path = (*connection_).get_current_path(),
+    };
+    log::info("stream_status={}"sv, stream_status);
+    create_trace_and_dispatch(shared_.dispatcher, trace_info, stream_status);
+  }
 }
 
 // server::MarketDataStream
@@ -159,12 +160,12 @@ void MarketData::operator()(Trace<web::socket::Connected> const &) {
 void MarketData::operator()(Trace<web::socket::Disconnected> const &event) {
   auto &[trace_info, disconnected] = event;
   ++counter_.disconnect;
-  create_trace_and_dispatch_2(trace_info, ConnectionStatus::DISCONNECTED);
+  publish(trace_info, ConnectionStatus::DISCONNECTED);
 }
 
 void MarketData::operator()(Trace<web::socket::Ready> const &event) {
   auto &[trace_info, ready] = event;
-  create_trace_and_dispatch_2(trace_info, ConnectionStatus::READY);
+  publish(trace_info, ConnectionStatus::READY);
   subscribe();
 }
 
@@ -176,7 +177,7 @@ void MarketData::operator()(Trace<web::socket::Close> const &event) {
 void MarketData::operator()(Trace<web::socket::Latency> const &event) {
   auto &[trace_info, latency] = event;
   auto external_latency = ExternalLatency{
-      .stream_id = stream_id_,
+      .stream_id = stream_id(),
       .account = {},
       .latency = latency.sample,
   };
@@ -215,7 +216,7 @@ void MarketData::operator()(Trace<protocol::json::TradeHistory> const &event) {
         return;
       }
       auto trade_summary = TradeSummary{
-          .stream_id = stream_id_,
+          .stream_id = stream_id(),
           .exchange = shared_.settings.exchange,
           .symbol = symbol,
           .trades = trades,
