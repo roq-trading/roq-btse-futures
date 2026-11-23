@@ -97,8 +97,8 @@ struct Controller final : public Base<Controller>,
   template <typename... Args>
   static void dispatch_helper(auto &self, Args &&...);
 
-  template <typename Res, typename T, typename... Args>
-  Res dispatch_order_action(Trace<T> const &, Args &&...);
+  template <typename T, typename... Args>
+  uint16_t dispatch_order_action(Trace<T> const &, Args &&...);
 
   struct OrderEntryRR final {
     OrderEntryRR(std::vector<std::unique_ptr<OrderEntry>> &&);
