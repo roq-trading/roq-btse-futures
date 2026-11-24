@@ -260,7 +260,7 @@ uint16_t Controller::dispatch_order_action(Trace<T> const &event, Args &&...args
   }
   auto &stream = (*iter).second.get_next();
   stream(event, args...);
-  return stream.stream_id();
+  return stream.stream_id;
 }
 
 // OrderEntryRR

@@ -74,7 +74,7 @@ struct create_metrics final : public utils::metrics::Factory {
 // === IMPLEMENTATION ===
 
 OrderBook::OrderBook(Handler &handler, io::Context &context, uint16_t stream_id, Shared &shared, size_t index)
-    : server::MarketDataStream{stream_id}, handler_{handler}, name_{create_name(stream_id)}, index_{index},
+    : server::MarketDataStream{stream_id, {}, SUPPORTS}, handler_{handler}, name_{create_name(stream_id)}, index_{index},
       connection_{create_connection(*this, shared.settings, context, shared)}, decode_buffer_{shared.settings.misc.decode_buffer_size, MAX_DECODE_BUFFER_DEPTH},
       counter_{
           .disconnect = create_metrics(shared.settings, name_, "disconnect"sv),
@@ -128,9 +128,9 @@ void OrderBook::operator()(Trace<ConnectionStatus> const &event, std::string_vie
   auto &[trace_info, connection_status] = event;
   if (update(connection_status, reason)) {
     auto stream_status = StreamStatus{
-        .stream_id = stream_id(),
-        .account = {},
-        .supports = SUPPORTS,
+        .stream_id = stream_id,
+        .account = account,
+        .supports = supports,
         .transport = Transport::TCP,
         .protocol = Protocol::WS,
         .encoding = {Encoding::JSON},
@@ -179,7 +179,7 @@ void OrderBook::operator()(Trace<web::socket::Close> const &) {
 void OrderBook::operator()(Trace<web::socket::Latency> const &event) {
   auto &[trace_info, latency] = event;
   auto external_latency = ExternalLatency{
-      .stream_id = stream_id(),
+      .stream_id = stream_id,
       .account = {},
       .latency = latency.sample,
   };
@@ -278,7 +278,7 @@ void OrderBook::operator()(Trace<protocol::json::SnapshotL1> const &event) {
     auto price_helper = [](auto &value) -> double { return std::empty(value) ? NaN : value[0].price; };
     auto size_helper = [](auto &value) -> double { return std::empty(value) ? NaN : value[0].size; };
     auto top_of_book = TopOfBook{
-        .stream_id = stream_id(),
+        .stream_id = stream_id,
         .exchange = shared_.settings.exchange,
         .symbol = data.symbol,
         .layer{
@@ -326,7 +326,7 @@ void OrderBook::operator()(Trace<protocol::json::Update> const &event) {
       return;
     }
     auto market_by_price_update = MarketByPriceUpdate{
-        .stream_id = stream_id(),
+        .stream_id = stream_id,
         .exchange = shared_.settings.exchange,
         .symbol = data.symbol,
         .bids = bids,
