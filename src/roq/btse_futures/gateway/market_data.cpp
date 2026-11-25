@@ -89,6 +89,17 @@ MarketData::MarketData(Handler &handler, io::Context &context, uint16_t stream_i
 
 // server::Stream
 
+void MarketData::operator()(metrics::Writer &writer) const {
+  writer
+      // counter
+      .write(counter_.disconnect, metrics::Type::COUNTER)
+      // profile
+      .write(profile_.parse, metrics::Type::PROFILE)
+      .write(profile_.trade_history, metrics::Type::PROFILE)
+      // latency
+      .write(latency_.ping, metrics::Type::LATENCY);
+}
+
 void MarketData::operator()(Trace<Start> const &event) {
   (*connection_)(event);
 }
@@ -107,17 +118,6 @@ void MarketData::operator()(Trace<Timer> const &event) {
       }
     }
   }
-}
-
-void MarketData::operator()(metrics::Writer &writer) const {
-  writer
-      // counter
-      .write(counter_.disconnect, metrics::Type::COUNTER)
-      // profile
-      .write(profile_.parse, metrics::Type::PROFILE)
-      .write(profile_.trade_history, metrics::Type::PROFILE)
-      // latency
-      .write(latency_.ping, metrics::Type::LATENCY);
 }
 
 void MarketData::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {

@@ -92,6 +92,18 @@ OrderBook::OrderBook(Handler &handler, io::Context &context, uint16_t stream_id,
 
 // server::Stream
 
+void OrderBook::operator()(metrics::Writer &writer) const {
+  writer
+      // counter
+      .write(counter_.disconnect, metrics::Type::COUNTER)
+      // profile
+      .write(profile_.parse, metrics::Type::PROFILE)
+      .write(profile_.snapshot_l1, metrics::Type::PROFILE)
+      .write(profile_.update, metrics::Type::PROFILE)
+      // latency
+      .write(latency_.ping, metrics::Type::LATENCY);
+}
+
 void OrderBook::operator()(Trace<Start> const &event) {
   (*connection_)(event);
 }
@@ -110,18 +122,6 @@ void OrderBook::operator()(Trace<Timer> const &event) {
       }
     }
   }
-}
-
-void OrderBook::operator()(metrics::Writer &writer) const {
-  writer
-      // counter
-      .write(counter_.disconnect, metrics::Type::COUNTER)
-      // profile
-      .write(profile_.parse, metrics::Type::PROFILE)
-      .write(profile_.snapshot_l1, metrics::Type::PROFILE)
-      .write(profile_.update, metrics::Type::PROFILE)
-      // latency
-      .write(latency_.ping, metrics::Type::LATENCY);
 }
 
 void OrderBook::operator()(Trace<ConnectionStatus> const &event, std::string_view const &reason) {
